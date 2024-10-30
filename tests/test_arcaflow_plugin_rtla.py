@@ -9,9 +9,7 @@ class HelloWorldTest(unittest.TestCase):
     def test_serialization():
         plugin.test_object_serialization(rtla_plugin.InputParams("John Doe"))
 
-        plugin.test_object_serialization(
-            rtla_plugin.SuccessOutput("Hello, world!")
-        )
+        plugin.test_object_serialization(rtla_plugin.SuccessOutput("Hello, world!"))
 
         plugin.test_object_serialization(
             rtla_plugin.ErrorOutput(error="This is an error")

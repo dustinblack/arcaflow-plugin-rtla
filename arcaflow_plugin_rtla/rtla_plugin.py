@@ -48,9 +48,9 @@ class StartTimerlatStep:
         id="run-timerlat",
         name="Run RTLA Timerlat",
         description=(
-                "Runs the RTLA Timerlat data collection and then processes the results "
-                "into a machine-readable format"
-            ),
+            "Runs the RTLA Timerlat data collection and then processes the results "
+            "into a machine-readable format"
+        ),
         outputs={"success": TimerlatOutput, "error": ErrorOutput},
         signal_handler_method_names=["cancel_step"],
         signal_emitters=[],
@@ -61,11 +61,7 @@ class StartTimerlatStep:
         params: TimerlatInputParams,
     ) -> typing.Tuple[str, typing.Union[TimerlatOutput, ErrorOutput]]:
 
-        timerlat_cmd = [
-            "/usr/bin/rtla",
-            "timerlat",
-            "hist"
-        ]
+        timerlat_cmd = ["/usr/bin/rtla", "timerlat", "hist"]
 
         timerlat_cmd.extend(params.to_flags())
 
