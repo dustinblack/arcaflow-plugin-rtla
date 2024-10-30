@@ -5,7 +5,7 @@ import re
 import sys
 import typing
 from threading import Event
-from arcaflow_plugin_sdk import plugin, schema, predefined_schemas
+from arcaflow_plugin_sdk import plugin, predefined_schemas
 from rtla_schema import (
     TimerlatInputParams,
     latency_stats_schema,
@@ -91,7 +91,7 @@ class StartTimerlatStep:
         except (KeyboardInterrupt, SystemExit):
             print("\nReceived keyboard interrupt; Stopping data collection.\n")
 
-        # TODO - Process rtla output
+        # WIP - Process rtla output
 
         # Example output with the -u flag (Usr columns included)
         # # RTLA timerlat histogram
@@ -156,10 +156,6 @@ class StartTimerlatStep:
         total_usr_latency = {}
         found_all = False
         for line in timerlat_return.stdout.splitlines():
-            # if re.match(r"^(?:#|Index|\d|over)", line):
-            #     continue
-            # if not re.match(r"^ALL", line) and not found_all:
-            #     continue
             if re.match(r"^ALL", line) and not found_all:
                 found_all = True
             if found_all and re.match(r"^count", line):
