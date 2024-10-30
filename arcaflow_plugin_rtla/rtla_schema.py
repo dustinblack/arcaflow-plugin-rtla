@@ -105,7 +105,9 @@ class LatencyStats:
         schema.description("Maximum latency value"),
     ] = None
 
+
 latency_stats_schema = plugin.build_object_schema(LatencyStats)
+
 
 @dataclass
 class TimerlatOutput:
@@ -124,7 +126,6 @@ class TimerlatOutput:
         schema.name("total usr latency"),
         schema.description("Total user latency")
     ] = None
-
 
 
 @dataclass

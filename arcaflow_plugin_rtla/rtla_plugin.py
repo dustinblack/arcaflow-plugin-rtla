@@ -52,9 +52,9 @@ class StartTimerlatStep:
                 "into a machine-readable format"
             ),
         outputs={"success": TimerlatOutput, "error": ErrorOutput},
-            signal_handler_method_names=["cancel_step"],
-            signal_emitters=[],
-            step_object_constructor=lambda: StartTimerlatStep(),
+        signal_handler_method_names=["cancel_step"],
+        signal_emitters=[],
+        step_object_constructor=lambda: StartTimerlatStep(),
     )
     def run_timerlat(
         self,
@@ -98,40 +98,40 @@ class StartTimerlatStep:
         # # Time unit is microseconds (us)
         # # Duration:   0 00:00:04
         # Index   IRQ-001   Thr-001   Usr-001   IRQ-002   Thr-002   Usr-002
-        # 0           172         0         0      2138         0         0 
-        # 1          2805         0         0       651         0         0 
-        # 2             7        96         0        58      1349         0 
-        # 3             4        36        46        22      1150       243 
-        # 4             9        15        76       103       116      1888 
-        # 5             1        24        12        22        20       451 
-        # 6             0       531        18         6       135        35 
-        # 7             1      1798        21         0       137        41 
-        # 8             1       301        18         0        53       116 
-        # 9             0        30      1335         0        22        37 
-        # 10            0        86      1085         0         6       107 
-        # 11            0        66       156         0         8        48 
-        # 12            0         6        59         0         2        11 
-        # 13            0         4       120         0         1         7 
-        # 14            0         3        27         0         1        10 
-        # 15            0         1         7         0         0         2 
-        # 16            0         1        12         0         0         3 
-        # 17            0         0         3         0         0         0 
-        # 18            0         0         0         0         0         1 
-        # 19            0         2         1         0         0         0 
-        # 20            0         0         2         0         0         0 
-        # 23            0         0         1         0         0         0 
-        # 38            0         0         1         0         0         0 
-        # over:         0         0         0         0         0         0 
-        # count:     3000      3000      3000      3000      3000      3000 
-        # min:          0         2         3         0         2         3 
-        # avg:          0         6         9         0         3         4 
-        # max:          8        19        38         6        14        18 
+        # 0           172         0         0      2138         0         0
+        # 1          2805         0         0       651         0         0
+        # 2             7        96         0        58      1349         0
+        # 3             4        36        46        22      1150       243
+        # 4             9        15        76       103       116      1888
+        # 5             1        24        12        22        20       451
+        # 6             0       531        18         6       135        35
+        # 7             1      1798        21         0       137        41
+        # 8             1       301        18         0        53       116
+        # 9             0        30      1335         0        22        37
+        # 10            0        86      1085         0         6       107
+        # 11            0        66       156         0         8        48
+        # 12            0         6        59         0         2        11
+        # 13            0         4       120         0         1         7
+        # 14            0         3        27         0         1        10
+        # 15            0         1         7         0         0         2
+        # 16            0         1        12         0         0         3
+        # 17            0         0         3         0         0         0
+        # 18            0         0         0         0         0         1
+        # 19            0         2         1         0         0         0
+        # 20            0         0         2         0         0         0
+        # 23            0         0         1         0         0         0
+        # 38            0         0         1         0         0         0
+        # over:         0         0         0         0         0         0
+        # count:     3000      3000      3000      3000      3000      3000
+        # min:          0         2         3         0         2         3
+        # avg:          0         6         9         0         3         4
+        # max:          8        19        38         6        14        18
         # ALL:        IRQ       Thr       Usr
-        # count:     6000      6000      6000 
-        # min:          0         2         3 
-        # avg:          0         5         7 
-        # max:          8        19        38 
-        
+        # count:     6000      6000      6000
+        # min:          0         2         3
+        # avg:          0         5         7
+        # max:          8        19        38
+
         # total_irq_latency: {
         #     count: 6000,
         #     min: 0,
