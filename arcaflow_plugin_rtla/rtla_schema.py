@@ -114,17 +114,17 @@ class TimerlatOutput:
     total_irq_latency: typing.Annotated[
         LatencyStats,
         schema.name("total irq latency"),
-        schema.description("Total IRQ latency")
+        schema.description("Total IRQ latency"),
     ] = None
     total_thr_latency: typing.Annotated[
         LatencyStats,
         schema.name("total thread latency"),
-        schema.description("Total thread latency")
+        schema.description("Total thread latency"),
     ] = None
     total_usr_latency: typing.Annotated[
         typing.Optional[LatencyStats],
         schema.name("total usr latency"),
-        schema.description("Total user latency")
+        schema.description("Total user latency"),
     ] = None
 
 
