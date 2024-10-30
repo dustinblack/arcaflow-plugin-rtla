@@ -2,7 +2,7 @@
 
 import typing
 from dataclasses import dataclass
-from arcaflow_plugin_sdk import plugin, schema, validation
+from arcaflow_plugin_sdk import plugin, schema
 
 
 def params_to_flags(params: dict) -> str:
@@ -104,7 +104,7 @@ class LatencyStats:
         schema.name("maximum latency"),
         schema.description("Maximum latency value"),
     ] = None
-    
+
 latency_stats_schema = plugin.build_object_schema(LatencyStats)
 
 @dataclass
