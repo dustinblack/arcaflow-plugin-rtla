@@ -1,5 +1,5 @@
 # Package path for this plugin module relative to the repo root
-ARG package=arcaflow_plugin_template_python
+ARG package=arcaflow_plugin_rtla
 
 # STAGE 1 -- Build module dependencies and run tests
 # The 'poetry' and 'coverage' modules are installed and verson-controlled in the
@@ -40,12 +40,12 @@ RUN python -m pip install -r requirements.txt
 
 WORKDIR /app/${package}
 
-ENTRYPOINT ["python", "template_python_plugin.py"]
+ENTRYPOINT ["python", "rtla_plugin.py"]
 CMD []
 
-LABEL org.opencontainers.image.source="https://github.com/arcalot/arcaflow-plugin-template-python"
+LABEL org.opencontainers.image.source="https://github.com/arcalot/arcaflow-plugin-rtla"
 LABEL org.opencontainers.image.licenses="Apache-2.0+GPL-2.0-only"
 LABEL org.opencontainers.image.vendor="Arcalot project"
 LABEL org.opencontainers.image.authors="Arcalot contributors"
-LABEL org.opencontainers.image.title="Python Plugin Template"
+LABEL org.opencontainers.image.title="Python Plugin rtla"
 LABEL io.github.arcalot.arcaflow.plugin.version="1"
