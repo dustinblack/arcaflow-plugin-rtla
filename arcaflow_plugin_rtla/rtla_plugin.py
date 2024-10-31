@@ -64,12 +64,15 @@ class StartTimerlatStep:
         timerlat_cmd = ["/usr/bin/rtla", "timerlat", "hist"]
         timerlat_cmd.extend(params.to_flags())
 
+        timerlat_return = open("output.txt", "w")
+
         try:
             print("Gathering data... Use Ctrl-C to stop.")
-            timerlat_return = subprocess.run(
+            proc = subprocess.Popen(
                 timerlat_cmd,
-                check=True,
-                stdout=subprocess.PIPE,
+                start_new_session=True,
+                stdout=timerlat_return,
+                stderr=subprocess.PIPE,
                 text=True,
             )
 
@@ -87,75 +90,7 @@ class StartTimerlatStep:
         except (KeyboardInterrupt, SystemExit):
             print("\nReceived keyboard interrupt; Stopping data collection.\n")
 
-        # WIP - Process rtla output
-
-        # Example output with the -u flag (Usr columns included)
-        # # RTLA timerlat histogram
-        # # Time unit is microseconds (us)
-        # # Duration:   0 00:00:04
-        # Index   IRQ-001   Thr-001   Usr-001   IRQ-002   Thr-002   Usr-002
-        # 0           172         0         0      2138         0         0
-        # 1          2805         0         0       651         0         0
-        # 2             7        96         0        58      1349         0
-        # 3             4        36        46        22      1150       243
-        # 4             9        15        76       103       116      1888
-        # 5             1        24        12        22        20       451
-        # 6             0       531        18         6       135        35
-        # 7             1      1798        21         0       137        41
-        # 8             1       301        18         0        53       116
-        # 9             0        30      1335         0        22        37
-        # 10            0        86      1085         0         6       107
-        # 11            0        66       156         0         8        48
-        # 12            0         6        59         0         2        11
-        # 13            0         4       120         0         1         7
-        # 14            0         3        27         0         1        10
-        # 15            0         1         7         0         0         2
-        # 16            0         1        12         0         0         3
-        # 17            0         0         3         0         0         0
-        # 18            0         0         0         0         0         1
-        # 19            0         2         1         0         0         0
-        # 20            0         0         2         0         0         0
-        # 23            0         0         1         0         0         0
-        # 38            0         0         1         0         0         0
-        # over:         0         0         0         0         0         0
-        # count:     3000      3000      3000      3000      3000      3000
-        # min:          0         2         3         0         2         3
-        # avg:          0         6         9         0         3         4
-        # max:          8        19        38         6        14        18
-        # ALL:        IRQ       Thr       Usr
-        # count:     6000      6000      6000
-        # min:          0         2         3
-        # avg:          0         5         7
-        # max:          8        19        38
-
-        # [
-        #     {
-        #         "index": 0,
-        #         "IRQ-001": 172,
-        #         "Thr-001": 0,
-        #         ...
-        #     },
-        #     ...
-        # ]
-
-        # total_irq_latency: {
-        #     count: 6000,
-        #     min: 0,
-        #     avg: 0,
-        #     max: 0,
-        # }
-        # total_thr_latency: {
-        #     count: 6000,
-        #     min: 2,
-        #     avg: 5,
-        #     max: 19,
-        # }
-        # total_usr_latency: {
-        #     count: 6000,
-        #     min: 3,
-        #     avg: 7,
-        #     max: 38,
-        # }
+        proc.communicate()
 
         latency_hist = []
         total_irq_latency = {}
@@ -164,29 +99,31 @@ class StartTimerlatStep:
         stats_names = ["over:", "count:", "min:", "avg:", "max:"]
         stats_per_col = []
         found_all = False
-        for line in timerlat_return.stdout.splitlines():
-            if re.match(r"^Index", line):
-                cols = line.lower().split()
-            if (re.match(r"^\d", line)) or (
-                line.split()[0] in stats_names and not found_all
-            ):
-                row_obj = {}
-                for i, col in enumerate(cols):
-                    row_obj[col] = line.split()[i]
-                if re.match(r"^\d", line):
-                    latency_hist.append(row_obj)
+
+        with open("output.txt", "r") as file:
+            for line in file:
+                if re.match(r"^Index", line):
+                    cols = line.lower().split()
+                if (re.match(r"^\d", line)) or (
+                    line.split()[0] in stats_names and not found_all
+                ):
+                    row_obj = {}
+                    for i, col in enumerate(cols):
+                        row_obj[col] = line.split()[i]
+                    if re.match(r"^\d", line):
+                        latency_hist.append(row_obj)
+                    else:
+                        stats_per_col.append(row_obj)
+                if re.match(r"^ALL", line) and not found_all:
+                    found_all = True
+                if found_all and line.split()[0] in stats_names:
+                    if line.split()[0] != "over:":
+                        total_irq_latency[line.split()[0][:-1]] = line.split()[1]
+                        total_thr_latency[line.split()[0][:-1]] = line.split()[2]
+                        if params.user_threads:
+                            total_usr_latency[line.split()[0][:-1]] = line.split()[3]
                 else:
-                    stats_per_col.append(row_obj)
-            if re.match(r"^ALL", line) and not found_all:
-                found_all = True
-            if found_all and line.split()[0] in stats_names:
-                if line.split()[0] != "over:":
-                    total_irq_latency[line.split()[0][:-1]] = line.split()[1]
-                    total_thr_latency[line.split()[0][:-1]] = line.split()[2]
-                    if params.user_threads:
-                        total_usr_latency[line.split()[0][:-1]] = line.split()[3]
-            else:
-                continue
+                    continue
 
         if params.user_threads:
             return "success", TimerlatOutput(
