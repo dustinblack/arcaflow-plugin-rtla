@@ -161,15 +161,20 @@ class StartTimerlatStep:
         total_irq_latency = {}
         total_thr_latency = {}
         total_usr_latency = {}
+        stats_names = ["over:", "count:", "min:", "avg:", "max:"]
+        stats_per_col = []
         found_all = False
         for line in timerlat_return.stdout.splitlines():
             if re.match(r"^Index", line):
                 cols = line.lower().split()
-            if re.match(r"^\d", line):
+            if (re.match(r"^\d", line)) or (line.split()[0] in stats_names and not found_all):
                 row_obj = {}
                 for i, col in enumerate(cols):
                     row_obj[col] = line.split()[i]
-                latency_hist.append(row_obj)
+                if re.match(r"^\d", line):
+                    latency_hist.append(row_obj)
+                else:
+                    stats_per_col.append(row_obj)
             if re.match(r"^ALL", line) and not found_all:
                 found_all = True
             if found_all and re.match(r"^count", line):
@@ -194,6 +199,7 @@ class StartTimerlatStep:
 
         return "success", TimerlatOutput(
             latency_hist,
+            stats_per_col,
             latency_stats_schema.unserialize(total_irq_latency),
             latency_stats_schema.unserialize(total_thr_latency),
             latency_stats_schema.unserialize(total_usr_latency),

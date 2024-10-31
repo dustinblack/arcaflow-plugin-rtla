@@ -116,6 +116,11 @@ class TimerlatOutput:
         schema.name("latency histogram"),
         schema.description("Histogram of latencies"),
     ] = None
+    stats_per_col: typing.Annotated[
+        typing.List[typing.Any],
+        schema.name("statistics per column"),
+        schema.description("Latency statistics per captured column"),
+    ] = None
     total_irq_latency: typing.Annotated[
         LatencyStats,
         schema.name("total irq latency"),
