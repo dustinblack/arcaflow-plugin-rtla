@@ -65,6 +65,8 @@ class StartTimerlatStep:
 
         timerlat_cmd.extend(params.to_flags())
 
+        print(" ".join(timerlat_cmd))
+
         try:
             print("Gathering data... Use Ctrl-C to stop.")
             timerlat_return = subprocess.run(

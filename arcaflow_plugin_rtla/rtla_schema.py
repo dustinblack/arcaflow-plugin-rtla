@@ -13,7 +13,7 @@ def params_to_flags(params: dict) -> str:
         if isinstance(value, bool):
             result.append(f"-{key}")
         elif isinstance(value, list):
-            result.append(f"-{key} {','.join(value)}")
+            result.append(f"-{key} {','.join(str(i) for i in value)}")
         else:
             result.append(f"-{key} {value}")
     return result
