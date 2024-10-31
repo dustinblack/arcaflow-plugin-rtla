@@ -82,6 +82,7 @@ class StartTimerlatStep:
                 f"{err.cmd[0]} failed with return code {err.returncode}:\n{err.output}"
             )
 
+        # FIXME -- KEYBOARD INTERRUPT NOT WORKING
         # Secondary block interrupt is via the KeyboardInterrupt exception.
         # This enables running the plugin stand-alone without a workflow.
         except (KeyboardInterrupt, SystemExit):
@@ -167,7 +168,9 @@ class StartTimerlatStep:
         for line in timerlat_return.stdout.splitlines():
             if re.match(r"^Index", line):
                 cols = line.lower().split()
-            if (re.match(r"^\d", line)) or (line.split()[0] in stats_names and not found_all):
+            if (re.match(r"^\d", line)) or (
+                line.split()[0] in stats_names and not found_all
+            ):
                 row_obj = {}
                 for i, col in enumerate(cols):
                     row_obj[col] = line.split()[i]
@@ -181,17 +184,26 @@ class StartTimerlatStep:
                 if line.split()[0] != "over:":
                     total_irq_latency[line.split()[0][:-1]] = line.split()[1]
                     total_thr_latency[line.split()[0][:-1]] = line.split()[2]
-                    total_usr_latency[line.split()[0][:-1]] = line.split()[3]
+                    if params.user_threads:
+                        total_usr_latency[line.split()[0][:-1]] = line.split()[3]
             else:
                 continue
 
-        return "success", TimerlatOutput(
-            latency_hist,
-            stats_per_col,
-            latency_stats_schema.unserialize(total_irq_latency),
-            latency_stats_schema.unserialize(total_thr_latency),
-            latency_stats_schema.unserialize(total_usr_latency),
-        )
+        if params.user_threads:
+            return "success", TimerlatOutput(
+                latency_hist,
+                stats_per_col,
+                latency_stats_schema.unserialize(total_irq_latency),
+                latency_stats_schema.unserialize(total_thr_latency),
+                latency_stats_schema.unserialize(total_usr_latency),
+            )
+        else:
+            return "success", TimerlatOutput(
+                latency_hist,
+                stats_per_col,
+                latency_stats_schema.unserialize(total_irq_latency),
+                latency_stats_schema.unserialize(total_thr_latency),
+            )
 
 
 if __name__ == "__main__":
