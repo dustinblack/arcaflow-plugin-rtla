@@ -23,7 +23,7 @@ jobs:
 
   docsgen:
     needs: act
-    uses: arcalot/arcaflow-docsgen/.github/workflows/reusable_workflow.yaml@main
+    uses: arcalot/arcaflow-docsgen/.github/workflows/reusable_workflow.yaml@PR-support
     permissions:
       contents: write
       pull-requests: write
