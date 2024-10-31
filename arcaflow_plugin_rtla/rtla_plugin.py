@@ -177,23 +177,11 @@ class StartTimerlatStep:
                     stats_per_col.append(row_obj)
             if re.match(r"^ALL", line) and not found_all:
                 found_all = True
-            if found_all and re.match(r"^count", line):
-                total_irq_latency["count"] = line.split()[1]
-                total_thr_latency["count"] = line.split()[2]
-                # TODO make usr values optional
-                total_usr_latency["count"] = line.split()[3]
-            if found_all and re.match(r"^min", line):
-                total_irq_latency["min"] = line.split()[1]
-                total_thr_latency["min"] = line.split()[2]
-                total_usr_latency["min"] = line.split()[3]
-            if found_all and re.match(r"^avg", line):
-                total_irq_latency["avg"] = line.split()[1]
-                total_thr_latency["avg"] = line.split()[2]
-                total_usr_latency["avg"] = line.split()[3]
-            if found_all and re.match(r"^max", line):
-                total_irq_latency["max"] = line.split()[1]
-                total_thr_latency["max"] = line.split()[2]
-                total_usr_latency["max"] = line.split()[3]
+            if found_all and line.split()[0] in stats_names:
+                if line.split()[0] != "over:":
+                    total_irq_latency[line.split()[0][:-1]] = line.split()[1]
+                    total_thr_latency[line.split()[0][:-1]] = line.split()[2]
+                    total_usr_latency[line.split()[0][:-1]] = line.split()[3]
             else:
                 continue
 
