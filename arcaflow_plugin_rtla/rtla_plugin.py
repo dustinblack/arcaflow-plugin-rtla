@@ -128,6 +128,16 @@ class StartTimerlatStep:
         # avg:          0         5         7
         # max:          8        19        38
 
+        # [
+        #     {
+        #         "index": 0,
+        #         "IRQ-001": 172,
+        #         "Thr-001": 0,
+        #         ...
+        #     },
+        #     ...
+        # ]
+
         # total_irq_latency: {
         #     count: 6000,
         #     min: 0,
@@ -147,11 +157,19 @@ class StartTimerlatStep:
         #     max: 38,
         # }
 
+        latency_hist = []
         total_irq_latency = {}
         total_thr_latency = {}
         total_usr_latency = {}
         found_all = False
         for line in timerlat_return.stdout.splitlines():
+            if re.match(r"^Index", line):
+                cols = line.lower().split()
+            if re.match(r"^\d", line):
+                row_obj = {}
+                for i, col in enumerate(cols):
+                    row_obj[col] = line.split()[i]
+                latency_hist.append(row_obj)
             if re.match(r"^ALL", line) and not found_all:
                 found_all = True
             if found_all and re.match(r"^count", line):
@@ -175,6 +193,7 @@ class StartTimerlatStep:
                 continue
 
         return "success", TimerlatOutput(
+            latency_hist,
             latency_stats_schema.unserialize(total_irq_latency),
             latency_stats_schema.unserialize(total_thr_latency),
             latency_stats_schema.unserialize(total_usr_latency),

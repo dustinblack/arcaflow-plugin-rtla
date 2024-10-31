@@ -111,6 +111,11 @@ latency_stats_schema = plugin.build_object_schema(LatencyStats)
 
 @dataclass
 class TimerlatOutput:
+    latency_hist: typing.Annotated[
+        typing.List[typing.Any],
+        schema.name("latency histogram"),
+        schema.description("Histogram of latencies"),
+    ] = None
     total_irq_latency: typing.Annotated[
         LatencyStats,
         schema.name("total irq latency"),
