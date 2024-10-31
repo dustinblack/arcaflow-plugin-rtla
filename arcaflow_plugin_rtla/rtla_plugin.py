@@ -62,10 +62,7 @@ class StartTimerlatStep:
     ) -> typing.Tuple[str, typing.Union[TimerlatOutput, ErrorOutput]]:
 
         timerlat_cmd = ["/usr/bin/rtla", "timerlat", "hist"]
-
         timerlat_cmd.extend(params.to_flags())
-
-        print(" ".join(timerlat_cmd))
 
         try:
             print("Gathering data... Use Ctrl-C to stop.")
