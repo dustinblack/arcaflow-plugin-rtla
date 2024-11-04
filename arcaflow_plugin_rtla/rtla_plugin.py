@@ -76,8 +76,6 @@ class StartTimerlatStep:
                 text=True,
             )
 
-            proc.communicate()
-
             # Block here, waiting on the cancel signal
             self.exit.wait(params.duration)
 
@@ -91,8 +89,12 @@ class StartTimerlatStep:
         # This enables running the plugin stand-alone without a workflow.
         except (KeyboardInterrupt, SystemExit):
             print("\nReceived keyboard interrupt; Stopping data collection.\n")
+            self.finished_early = True
+
+        if self.finished_early:
             proc.send_signal(2)
-            proc.communicate()
+
+        proc.communicate()
 
         latency_hist = []
         total_irq_latency = {}
