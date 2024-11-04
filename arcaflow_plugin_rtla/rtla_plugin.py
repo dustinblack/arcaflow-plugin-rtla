@@ -135,13 +135,13 @@ class StartTimerlatStep:
                 latency_stats_schema.unserialize(total_thr_latency),
                 latency_stats_schema.unserialize(total_usr_latency),
             )
-        else:
-            return "success", TimerlatOutput(
-                latency_hist,
-                stats_per_col,
-                latency_stats_schema.unserialize(total_irq_latency),
-                latency_stats_schema.unserialize(total_thr_latency),
-            )
+
+        return "success", TimerlatOutput(
+            latency_hist,
+            stats_per_col,
+            latency_stats_schema.unserialize(total_irq_latency),
+            latency_stats_schema.unserialize(total_thr_latency),
+        )
 
 
 if __name__ == "__main__":
