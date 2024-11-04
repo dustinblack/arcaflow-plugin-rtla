@@ -11,7 +11,7 @@ on:
       - published
 jobs:
   act:
-    uses: arcalot/arcaflow-container-toolkit/.github/workflows/reusable_workflow.yaml@main
+    uses: arcalot/arcaflow-container-toolkit/.github/workflows/reusable_workflow.yaml@name-PR-image-tags
     with:
       image_name: ${{ github.event.repository.name }}
       image_tag: 'latest'
