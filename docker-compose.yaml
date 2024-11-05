@@ -4,6 +4,6 @@ services:
     image: quay.io/arcalot/arcaflow-plugin-rtla
     build: .
     volumes:
-      - source: ./inputs/example.yaml
+      - source: ./configs/timerlat_example.yaml
         target: /config/example.yaml
         type: bind
