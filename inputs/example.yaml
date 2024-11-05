@@ -1,1 +1,4 @@
-name: John Doe
+duration: 5
+cpus:
+  - 1
+  - 2

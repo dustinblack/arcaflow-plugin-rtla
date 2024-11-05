@@ -1,33 +1,146 @@
 #!/usr/bin/env python3
 import unittest
 import rtla_plugin
+import rtla_schema
 from arcaflow_plugin_sdk import plugin
 
 
-class HelloWorldTest(unittest.TestCase):
+class RtlaTest(unittest.TestCase):
     @staticmethod
     def test_serialization():
-        plugin.test_object_serialization(rtla_plugin.InputParams("John Doe"))
+        plugin.test_object_serialization(
+            rtla_plugin.TimerlatInputParams(
+                period=100,
+                cpus=[0, 2, 4],
+                house_keeping=[1, 3, 5],
+                duration=10,
+                nano=False,
+                bucket_size=2,
+                entries=128,
+                user_threads=True,
+            )
+        )
 
-        plugin.test_object_serialization(rtla_plugin.SuccessOutput("Hello, world!"))
+        plugin.test_object_serialization(
+            rtla_plugin.TimerlatOutput(
+                latency_hist=[
+                    {
+                        "index": "0",
+                        "irq-001": "252",
+                        "thr-001": "0",
+                        "usr-001": "0",
+                    },
+                    {
+                        "index": "1",
+                        "irq-001": "679",
+                        "thr-001": "0",
+                        "usr-001": "0",
+                    },
+                ],
+                stats_per_col=[
+                    {
+                        "index": "over:",
+                        "irq-001": "0",
+                        "thr-001": "0",
+                        "usr-001": "0",
+                    },
+                    {
+                        "index": "count:",
+                        "irq-001": "1000",
+                        "thr-001": "1000",
+                        "usr-001": "1000",
+                    },
+                    {
+                        "index": "min:",
+                        "irq-001": "0",
+                        "thr-001": "2",
+                        "usr-001": "3",
+                    },
+                    {
+                        "index": "avg:",
+                        "irq-001": "0",
+                        "thr-001": "6",
+                        "usr-001": "8",
+                    },
+                    {
+                        "index": "max:",
+                        "irq-001": "6",
+                        "thr-001": "15",
+                        "usr-001": "19",
+                    },
+                ],
+                total_irq_latency=rtla_schema.latency_stats_schema.unserialize(
+                    {
+                        "count": 1000,
+                        "min": 0,
+                        "avg": 0,
+                        "max": 6,
+                    },
+                ),
+                total_thr_latency=rtla_schema.latency_stats_schema.unserialize(
+                    {
+                        "count": 1000,
+                        "min": 2,
+                        "avg": 6,
+                        "max": 15,
+                    },
+                ),
+                total_usr_latency=rtla_schema.latency_stats_schema.unserialize(
+                    {
+                        "count": 1000,
+                        "min": 3,
+                        "avg": 8,
+                        "max": 19,
+                    },
+                ),
+            )
+        )
 
         plugin.test_object_serialization(
             rtla_plugin.ErrorOutput(error="This is an error")
         )
 
     def test_functional(self):
-        input = rtla_plugin.InputParams(name="Example Joe")
-
-        output_id, output_data = rtla_plugin.hello_world(
-            params=input, run_id="plugin_ci"
+        timerlat_input = rtla_plugin.TimerlatInputParams(
+            period=100,
+            cpus=[1],
+            house_keeping=[1, 3, 5],
+            duration=3,
+            nano=False,
+            bucket_size=2,
+            entries=128,
+            user_threads=True,
         )
 
-        # The example plugin always returns an error:
+        output_id, output_data = rtla_plugin.StartTimerlatStep.run_timerlat(
+            params=timerlat_input, run_id="plugin_ci"
+        )
+
+        print(output_id)
+        print(output_data)
+
         self.assertEqual("success", output_id)
         self.assertEqual(
             output_data,
-            rtla_plugin.SuccessOutput("Hello, Example Joe!"),
+            rtla_plugin.TimerlatOutput(
+                latency_hist=[],
+                stats_per_col=[],
+                total_irq_latency=rtla_schema.LatencyStats(
+                    count=None, min=None, avg=None, max=None
+                ),
+                total_thr_latency=rtla_schema.LatencyStats(
+                    count=None, min=None, avg=None, max=None
+                ),
+                total_usr_latency=rtla_schema.LatencyStats(
+                    count=None, min=None, avg=None, max=None
+                ),
+            ),
         )
+        self.assertEqual(int(output_data.latency_hist[0]["index"]), 0)
+        self.assertEqual(output_data.stats_per_col[0]["index"], "over")
+        self.assertIsInstance(output_data.total_irq_latency.min, int)
+        self.assertIsInstance(output_data.total_thr_latency.avg, int)
+        self.assertIsInstance(output_data.total_usr_latency.max, int)
 
 
 if __name__ == "__main__":

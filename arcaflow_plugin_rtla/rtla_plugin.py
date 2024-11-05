@@ -84,13 +84,14 @@ class StartTimerlatStep:
                 f"{err.cmd[0]} failed with return code {err.returncode}:\n{err.output}"
             )
 
-        # FIXME -- KEYBOARD INTERRUPT NOT WORKING
         # Secondary block interrupt is via the KeyboardInterrupt exception.
         # This enables running the plugin stand-alone without a workflow.
         except (KeyboardInterrupt, SystemExit):
             print("\nReceived keyboard interrupt; Stopping data collection.\n")
             self.finished_early = True
 
+        # In either the case of a keyboard interrupt or a cancel signal, we need to
+        # send the SIGINT to the subprocess.
         if self.finished_early:
             proc.send_signal(2)
 
