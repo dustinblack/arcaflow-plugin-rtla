@@ -1,4 +1,5 @@
 duration: 5
+user-threads: True
 cpus:
   - 1
   - 2
