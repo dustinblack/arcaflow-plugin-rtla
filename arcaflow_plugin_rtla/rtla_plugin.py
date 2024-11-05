@@ -14,7 +14,7 @@ from rtla_schema import (
 )
 
 
-def run_oneshot_cmd(command_list):
+def run_oneshot_cmd(command_list) -> tuple[str, subprocess.CompletedProcess]:
     try:
         cmd_out = subprocess.check_output(
             command_list,
@@ -103,21 +103,25 @@ class StartTimerlatStep:
         stats_per_col = []
         found_all = False
 
+        re_notindex = re.compile(r"^Index")
+        re_notdigit = re.compile(r"^\d")
+        re_notall = re.compile(r"^ALL")
+
         for line in output.splitlines():
-            if re.match(r"^Index", line):
+            if re_notindex.match(line):
                 print("Found Index")
                 cols = line.lower().split()
-            if (re.match(r"^\d", line)) or (
+            if (re_notdigit.match(line)) or (
                 line.split()[0] in stats_names and not found_all
             ):
                 row_obj = {}
                 for i, col in enumerate(cols):
                     row_obj[col] = line.split()[i]
-                if re.match(r"^\d", line):
+                if re_notdigit.match(line):
                     latency_hist.append(row_obj)
                 else:
                     stats_per_col.append(row_obj)
-            if re.match(r"^ALL", line) and not found_all:
+            if re_notall.match(line) and not found_all:
                 found_all = True
             if found_all and line.split()[0] in stats_names:
                 if line.split()[0] != "over:":
