@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import subprocess
-import io
 import re
 import sys
 import typing
