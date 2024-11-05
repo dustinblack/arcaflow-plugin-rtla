@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess
+import io
 import re
 import sys
 import typing
@@ -64,14 +65,12 @@ class StartTimerlatStep:
         timerlat_cmd = ["/usr/bin/rtla", "timerlat", "hist"]
         timerlat_cmd.extend(params.to_flags())
 
-        timerlat_return = open("output.txt", "w")
-
         try:
             print("Gathering data... Use Ctrl-C to stop.")
             proc = subprocess.Popen(
                 timerlat_cmd,
                 start_new_session=True,
-                stdout=timerlat_return,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
             )
@@ -95,7 +94,7 @@ class StartTimerlatStep:
         if self.finished_early:
             proc.send_signal(2)
 
-        proc.communicate()
+        output, _ = proc.communicate()
 
         latency_hist = []
         total_irq_latency = {}
@@ -105,30 +104,30 @@ class StartTimerlatStep:
         stats_per_col = []
         found_all = False
 
-        with open("output.txt", "r") as file:
-            for line in file:
-                if re.match(r"^Index", line):
-                    cols = line.lower().split()
-                if (re.match(r"^\d", line)) or (
-                    line.split()[0] in stats_names and not found_all
-                ):
-                    row_obj = {}
-                    for i, col in enumerate(cols):
-                        row_obj[col] = line.split()[i]
-                    if re.match(r"^\d", line):
-                        latency_hist.append(row_obj)
-                    else:
-                        stats_per_col.append(row_obj)
-                if re.match(r"^ALL", line) and not found_all:
-                    found_all = True
-                if found_all and line.split()[0] in stats_names:
-                    if line.split()[0] != "over:":
-                        total_irq_latency[line.split()[0][:-1]] = line.split()[1]
-                        total_thr_latency[line.split()[0][:-1]] = line.split()[2]
-                        if params.user_threads:
-                            total_usr_latency[line.split()[0][:-1]] = line.split()[3]
+        for line in output.splitlines():
+            if re.match(r"^Index", line):
+                print("Found Index")
+                cols = line.lower().split()
+            if (re.match(r"^\d", line)) or (
+                line.split()[0] in stats_names and not found_all
+            ):
+                row_obj = {}
+                for i, col in enumerate(cols):
+                    row_obj[col] = line.split()[i]
+                if re.match(r"^\d", line):
+                    latency_hist.append(row_obj)
                 else:
-                    continue
+                    stats_per_col.append(row_obj)
+            if re.match(r"^ALL", line) and not found_all:
+                found_all = True
+            if found_all and line.split()[0] in stats_names:
+                if line.split()[0] != "over:":
+                    total_irq_latency[line.split()[0][:-1]] = line.split()[1]
+                    total_thr_latency[line.split()[0][:-1]] = line.split()[2]
+                    if params.user_threads:
+                        total_usr_latency[line.split()[0][:-1]] = line.split()[3]
+            else:
+                continue
 
         if params.user_threads:
             return "success", TimerlatOutput(

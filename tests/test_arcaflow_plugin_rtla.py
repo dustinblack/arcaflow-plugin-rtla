@@ -103,12 +103,12 @@ class RtlaTest(unittest.TestCase):
     def test_functional(self):
         timerlat_input = rtla_plugin.TimerlatInputParams(
             period=100,
-            cpus=[1],
-            house_keeping=[1, 3, 5],
+            cpus=[0],
+            house_keeping=[0],
             duration=3,
             nano=False,
             bucket_size=2,
-            entries=128,
+            entries=10,
             user_threads=True,
         )
 
