@@ -120,6 +120,7 @@ class RtlaTest(unittest.TestCase):
         self.assertEqual(
             output_data,
             rtla_plugin.TimerlatOutput(
+                time_unit="",
                 latency_hist=[],
                 stats_per_col=[],
                 total_irq_latency=rtla_schema.LatencyStats(

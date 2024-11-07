@@ -14,7 +14,7 @@ from rtla_schema import (
 )
 
 
-def run_oneshot_cmd(command_list) -> tuple[str, subprocess.CompletedProcess]:
+def run_oneshot_cmd(command_list: list[str]) -> tuple[str, subprocess.CompletedProcess]:
     try:
         cmd_out = subprocess.check_output(
             command_list,
@@ -29,8 +29,9 @@ def run_oneshot_cmd(command_list) -> tuple[str, subprocess.CompletedProcess]:
 
 
 class StartTimerlatStep:
-    exit = Event()
-    finished_early = False
+    def __init__(self, exit, finished_early):
+        self.exit = exit
+        self.finished_early = finished_early
 
     @plugin.signal_handler(
         id=predefined_schemas.cancel_signal_schema.id,
@@ -54,7 +55,7 @@ class StartTimerlatStep:
         outputs={"success": TimerlatOutput, "error": ErrorOutput},
         signal_handler_method_names=["cancel_step"],
         signal_emitters=[],
-        step_object_constructor=lambda: StartTimerlatStep(),
+        step_object_constructor=lambda: StartTimerlatStep(Event(), False),
     )
     def run_timerlat(
         self,
@@ -95,6 +96,39 @@ class StartTimerlatStep:
 
         output, _ = proc.communicate()
 
+        # The output from the `rtla timerlat hist` command is columnar in three
+        # sections, plus headers. The first section is histogram data, which will
+        # display either two or three colums per CPU (three if user threads are
+        # enabled). The second section is latency statistics for each of the same
+        # columns as the histogram section. The third section is collapsed totals of
+        # the statistical data from all CPUs.
+
+        # For the first and second sections, we want to retain the row/columnt format
+        # in the output for easy recreation of the data as a table. For the third
+        # section, we want to return key:value pairs for each of the IRQ, Thr, and Usr
+        # total stats.
+
+        # $ sudo rtla timerlat hist -u -d 1 -c 1,2 -E 10 -b 10
+        # # RTLA timerlat histogram
+        # # Time unit is microseconds (us)
+        # # Duration:   0 00:00:02
+        # Index   IRQ-001   Thr-001   Usr-001   IRQ-002   Thr-002   Usr-002
+        # 0          1000       944       134       999       998       986
+        # 10            0        55       863         0         1        13
+        # 20            0         1         3         0         0         0
+        # over:         0         0         0         0         0         0
+        # count:     1000      1000      1000       999       999       999
+        # min:          0         3         4         0         2         3
+        # avg:          1         7        10         0         2         3
+        # max:          7        21        24         3        11        15
+        # ALL:        IRQ       Thr       Usr
+        # count:     1999      1999      1999
+        # min:          0         2         3
+        # avg:          0         4         6
+        # max:          7        21        24
+
+        time_unit = ""
+        col_headers = []
         latency_hist = []
         total_irq_latency = {}
         total_thr_latency = {}
@@ -103,27 +137,36 @@ class StartTimerlatStep:
         stats_per_col = []
         found_all = False
 
-        re_notindex = re.compile(r"^Index")
-        re_notdigit = re.compile(r"^\d")
-        re_notall = re.compile(r"^ALL")
+        re_isunit = re.compile(r"^#\ Time\ unit")
+        re_isindex = re.compile(r"^Index")
+        re_isdigit = re.compile(r"^\d")
+        re_isall = re.compile(r"^ALL")
 
         for line in output.splitlines():
-            if re_notindex.match(line):
-                print("Found Index")
-                cols = line.lower().split()
-            if (re_notdigit.match(line)) or (
+            if re_isunit.match(line):
+                time_unit = line.split()[4]
+            # Capture the column headers
+            elif re_isindex.match(line):
+                col_headers = line.lower().split()
+            # Stats names repeat, so flag when have passed ^ALL
+            elif re_isall.match(line) and not found_all:
+                found_all = True
+            # Either this is a histogram bucket row, or the first time we have seen
+            # a row beginning with a stat name
+            elif (re_isdigit.match(line)) or (
                 line.split()[0] in stats_names and not found_all
             ):
+                # Capture the columnar data
                 row_obj = {}
-                for i, col in enumerate(cols):
+                for i, col in enumerate(col_headers):
                     row_obj[col] = line.split()[i]
-                if re_notdigit.match(line):
+                if re_isdigit.match(line):
                     latency_hist.append(row_obj)
                 else:
                     stats_per_col.append(row_obj)
-            if re_notall.match(line) and not found_all:
-                found_all = True
-            if found_all and line.split()[0] in stats_names:
+            # This is the second time we have seen a row beginning with a stat name, so
+            # we want to generate key:value pairs instead of columnar data
+            elif found_all and line.split()[0] in stats_names:
                 if line.split()[0] != "over:":
                     total_irq_latency[line.split()[0][:-1]] = line.split()[1]
                     total_thr_latency[line.split()[0][:-1]] = line.split()[2]
@@ -132,20 +175,17 @@ class StartTimerlatStep:
             else:
                 continue
 
-        if params.user_threads:
-            return "success", TimerlatOutput(
-                latency_hist,
-                stats_per_col,
-                latency_stats_schema.unserialize(total_irq_latency),
-                latency_stats_schema.unserialize(total_thr_latency),
-                latency_stats_schema.unserialize(total_usr_latency),
-            )
-
         return "success", TimerlatOutput(
+            time_unit,
             latency_hist,
             stats_per_col,
             latency_stats_schema.unserialize(total_irq_latency),
             latency_stats_schema.unserialize(total_thr_latency),
+            (
+                latency_stats_schema.unserialize(total_usr_latency)
+                if params.user_threads
+                else None
+            ),
         )
 
 

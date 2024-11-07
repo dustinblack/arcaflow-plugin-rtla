@@ -57,6 +57,8 @@ class TimerlatInputParams:
     ] = None
     entries: typing.Annotated[
         typing.Optional[int],
+        schema.min(10),
+        schema.max(9999999),
         schema.name("histogram entries"),
         schema.description("Set the number of entries of the histogram (default 256)"),
     ] = None
@@ -113,6 +115,11 @@ latency_stats_schema = plugin.build_object_schema(LatencyStats)
 
 @dataclass
 class TimerlatOutput:
+    time_unit: typing.Annotated[
+        str,
+        schema.name("latency unit"),
+        schema.description("Time unit for latency values"),
+    ] = None
     latency_hist: typing.Annotated[
         typing.List[typing.Any],
         schema.name("latency histogram"),
