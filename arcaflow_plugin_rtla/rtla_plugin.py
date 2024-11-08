@@ -66,7 +66,6 @@ class StartTimerlatStep:
         timerlat_cmd.extend(params.to_flags())
 
         try:
-            print("Gathering data... Use Ctrl-C to stop.")
             proc = subprocess.Popen(
                 timerlat_cmd,
                 start_new_session=True,
@@ -74,14 +73,15 @@ class StartTimerlatStep:
                 stderr=subprocess.PIPE,
                 text=True,
             )
-
-            # Block here, waiting on the cancel signal
-            self.exit.wait(params.duration)
-
         except subprocess.CalledProcessError as err:
             return "error", ErrorOutput(
                 f"{err.cmd[0]} failed with return code {err.returncode}:\n{err.output}"
             )
+
+        try:
+            # Block here, waiting on the cancel signal
+            print("Gathering data... Use Ctrl-C to stop.")
+            self.exit.wait(params.duration)
 
         # Secondary block interrupt is via the KeyboardInterrupt exception.
         # This enables running the plugin stand-alone without a workflow.
