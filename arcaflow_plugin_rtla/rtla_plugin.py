@@ -165,11 +165,12 @@ class StartTimerlatStep:
             # This is the second time we have seen a row beginning with a stat name, so
             # we want to generate key:value pairs instead of columnar data
             elif found_all and line.split()[0] in stats_names:
-                if line.split()[0] != "over:":
-                    total_irq_latency[line.split()[0][:-1]] = line.split()[1]
-                    total_thr_latency[line.split()[0][:-1]] = line.split()[2]
+                label = line.split()[0][:-1]
+                if label != "over":
+                    total_irq_latency[label] = line.split()[1]
+                    total_thr_latency[label] = line.split()[2]
                     if params.user_threads:
-                        total_usr_latency[line.split()[0][:-1]] = line.split()[3]
+                        total_usr_latency[label] = line.split()[3]
             else:
                 continue
 
