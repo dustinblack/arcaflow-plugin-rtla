@@ -158,20 +158,49 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 
 <table><tbody>
 <tr><th>Type:</th><td><code>scope</code></td><tr><th>Root object:</th><td>TimerlatOutput</td></tr>
-<tr><th>Properties</th><td><details><summary>latency_hist (<code>list[<code>any</code>]</code>)</summary>
-                <table><tbody><tr><th>Name:</th><td>latency histogram</td></tr><tr><th>Description:</th><td width="500">Histogram of latencies</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>any</code>]</code></td><tr><td colspan="2">
+<tr><th>Properties</th><td><details><summary>latency_hist (<code>list[<code>map[<code>string</code>,<code>int</code>]</code>]</code>)</summary>
+                <table><tbody><tr><th>Name:</th><td>latency histogram</td></tr><tr><th>Description:</th><td width="500">Histogram of latencies</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>map[<code>string</code>,<code>int</code>]</code>]</code></td><tr><td colspan="2">
     <details>
         <summary>List items</summary>
-        <table><tbody><tr><th>Type:</th><td><code>any</code></td></tr>
+        <table><tbody><tr><th>Type:</th><td><code>map[<code>string</code>,<code>int</code>]</code></td><tr><td colspan="2">
+    <details>
+        <summary>Key type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>string</code></td></tr>
+</tbody></table>
+    </details>
+</td></tr>
+<tr><td colspan="2">
+    <details>
+        <summary>Value type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>int</code></td>
+</tr>
+</tbody></table>
+    </details>
+</td></tr>
+</tr>
 </tbody></table>
     </details>
 </td></tr></tr>
 </tbody></table>
-            </details><details><summary>stats_per_col (<code>list[<code>any</code>]</code>)</summary>
-                <table><tbody><tr><th>Name:</th><td>statistics per column</td></tr><tr><th>Description:</th><td width="500">Latency statistics per captured column</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>any</code>]</code></td><tr><td colspan="2">
+            </details><details><summary>stats_per_col (<code>list[<code>map[<code>string</code>,<code>any</code>]</code>]</code>)</summary>
+                <table><tbody><tr><th>Name:</th><td>statistics per column</td></tr><tr><th>Description:</th><td width="500">Latency statistics per captured column</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>map[<code>string</code>,<code>any</code>]</code>]</code></td><tr><td colspan="2">
     <details>
         <summary>List items</summary>
+        <table><tbody><tr><th>Type:</th><td><code>map[<code>string</code>,<code>any</code>]</code></td><tr><td colspan="2">
+    <details>
+        <summary>Key type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>string</code></td></tr>
+</tbody></table>
+    </details>
+</td></tr>
+<tr><td colspan="2">
+    <details>
+        <summary>Value type</summary>
         <table><tbody><tr><th>Type:</th><td><code>any</code></td></tr>
+</tbody></table>
+    </details>
+</td></tr>
+</tr>
 </tbody></table>
     </details>
 </td></tr></tr>
@@ -210,20 +239,49 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tr>
 </tbody></table>
         </details><details><summary>TimerlatOutput (<code>object</code>)</summary>
-            <table><tbody><tr><th>Type:</th><td><code>object</code></td><tr><th>Properties</th><td><details><summary>latency_hist (<code>list[<code>any</code>]</code>)</summary>
-        <table><tbody><tr><th>Name:</th><td>latency histogram</td></tr><tr><th>Description:</th><td width="500">Histogram of latencies</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>any</code>]</code></td><tr><td colspan="2">
+            <table><tbody><tr><th>Type:</th><td><code>object</code></td><tr><th>Properties</th><td><details><summary>latency_hist (<code>list[<code>map[<code>string</code>,<code>int</code>]</code>]</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>latency histogram</td></tr><tr><th>Description:</th><td width="500">Histogram of latencies</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>map[<code>string</code>,<code>int</code>]</code>]</code></td><tr><td colspan="2">
     <details>
         <summary>List items</summary>
-        <table><tbody><tr><th>Type:</th><td><code>any</code></td></tr>
+        <table><tbody><tr><th>Type:</th><td><code>map[<code>string</code>,<code>int</code>]</code></td><tr><td colspan="2">
+    <details>
+        <summary>Key type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>string</code></td></tr>
+</tbody></table>
+    </details>
+</td></tr>
+<tr><td colspan="2">
+    <details>
+        <summary>Value type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>int</code></td>
+</tr>
+</tbody></table>
+    </details>
+</td></tr>
+</tr>
 </tbody></table>
     </details>
 </td></tr></tr>
 </tbody></table>
-        </details><details><summary>stats_per_col (<code>list[<code>any</code>]</code>)</summary>
-        <table><tbody><tr><th>Name:</th><td>statistics per column</td></tr><tr><th>Description:</th><td width="500">Latency statistics per captured column</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>any</code>]</code></td><tr><td colspan="2">
+        </details><details><summary>stats_per_col (<code>list[<code>map[<code>string</code>,<code>any</code>]</code>]</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>statistics per column</td></tr><tr><th>Description:</th><td width="500">Latency statistics per captured column</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>map[<code>string</code>,<code>any</code>]</code>]</code></td><tr><td colspan="2">
     <details>
         <summary>List items</summary>
+        <table><tbody><tr><th>Type:</th><td><code>map[<code>string</code>,<code>any</code>]</code></td><tr><td colspan="2">
+    <details>
+        <summary>Key type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>string</code></td></tr>
+</tbody></table>
+    </details>
+</td></tr>
+<tr><td colspan="2">
+    <details>
+        <summary>Value type</summary>
         <table><tbody><tr><th>Type:</th><td><code>any</code></td></tr>
+</tbody></table>
+    </details>
+</td></tr>
+</tr>
 </tbody></table>
     </details>
 </td></tr></tr>
