@@ -157,7 +157,13 @@ class StartTimerlatStep:
                 line.split()[0] in stats_names and not found_all
             ):
                 # Capture the columnar data
-                row_obj = dict(zip(col_headers, line.split()))
+                line_list = []
+                for element in line.split():
+                    try:
+                        line_list.append(int(element))
+                    except ValueError:
+                        line_list.append(element)
+                row_obj = dict(zip(col_headers, line_list))
                 if re_isdigit.match(line):
                     latency_hist.append(row_obj)
                 else:

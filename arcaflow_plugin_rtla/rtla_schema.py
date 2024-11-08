@@ -118,12 +118,12 @@ class TimerlatOutput:
         schema.description("Time unit for latency values"),
     ] = None
     latency_hist: typing.Annotated[
-        typing.List[typing.Any],
+        typing.List[typing.Dict[str, int]],
         schema.name("latency histogram"),
         schema.description("Histogram of latencies"),
     ] = None
     stats_per_col: typing.Annotated[
-        typing.List[typing.Any],
+        typing.List[typing.Dict[str, typing.Any]],
         schema.name("statistics per column"),
         schema.description("Latency statistics per captured column"),
     ] = None
