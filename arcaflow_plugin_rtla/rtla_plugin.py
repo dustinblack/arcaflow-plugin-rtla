@@ -162,7 +162,7 @@ class StartTimerlatStep:
                     latency_hist.append(row_obj)
                 else:
                     stats_per_col.append(row_obj)
-            # Since we've encountered the summary statistics (marked by the line 
+            # Since we've encountered the summary statistics (marked by the line
             # starting with "ALL"), generate key:value pairs instead of columnar data.
             elif found_all and line.split()[0] in stats_names:
                 label = line.split()[0][:-1]
