@@ -13,8 +13,8 @@ COPY poetry.lock /app/
 COPY pyproject.toml /app/
 
 # Convert the dependencies from poetry to a static requirements.txt file
-RUN python3 -m poetry install --without dev --no-root \
- && python3 -m poetry export -f requirements.txt --output requirements.txt --without-hashes
+RUN python -m poetry install --without dev --no-root \
+ && python -m poetry export -f requirements.txt --output requirements.txt --without-hashes
 
 COPY ${package}/ /app/${package}
 COPY tests /app/${package}/tests
@@ -40,7 +40,7 @@ COPY README.md /app/
 COPY ${package}/ /app/${package}
 
 # Install all plugin dependencies from the generated requirements.txt file
-RUN python -m pip install -r /app/requirements.txt
+RUN python -m pip install -r requirements.txt
 
 WORKDIR /app/${package}
 

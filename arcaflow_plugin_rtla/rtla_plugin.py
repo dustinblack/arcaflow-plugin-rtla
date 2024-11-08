@@ -137,19 +137,19 @@ class StartTimerlatStep:
         stats_per_col = []
         found_all = False
 
-        re_isunit = re.compile(r"^#\ Time\ unit")
+        re_isunit = re.compile(r"^# Time unit is (.+) .*$")
         re_isindex = re.compile(r"^Index")
         re_isdigit = re.compile(r"^\d")
         re_isall = re.compile(r"^ALL")
 
         for line in output.splitlines():
             if re_isunit.match(line):
-                time_unit = line.split()[4]
+                time_unit = re_isunit.match(line).group(1)
             # Capture the column headers
             elif re_isindex.match(line):
                 col_headers = line.lower().split()
             # Stats names repeat, so flag when have passed ^ALL
-            elif re_isall.match(line) and not found_all:
+            elif re_isall.match(line):
                 found_all = True
             # Either this is a histogram bucket row, or the first time we have seen
             # a row beginning with a stat name
@@ -162,8 +162,8 @@ class StartTimerlatStep:
                     latency_hist.append(row_obj)
                 else:
                     stats_per_col.append(row_obj)
-            # This is the second time we have seen a row beginning with a stat name, so
-            # we want to generate key:value pairs instead of columnar data
+            # Since we've encountered the summary statistics (marked by the line 
+            # starting with "ALL"), generate key:value pairs instead of columnar data.
             elif found_all and line.split()[0] in stats_names:
                 label = line.split()[0][:-1]
                 if label != "over":
@@ -171,8 +171,6 @@ class StartTimerlatStep:
                     total_thr_latency[label] = line.split()[2]
                     if params.user_threads:
                         total_usr_latency[label] = line.split()[3]
-            else:
-                continue
 
         return "success", TimerlatOutput(
             time_unit,
