@@ -10,13 +10,10 @@ def params_to_flags(params: dict) -> str:
     for key, value in params.items():
         if not value:
             continue
-        if isinstance(value, bool):
-            result.append(f"-{key}")
-        elif isinstance(value, list):
-            result.append(f"-{key}")
+        result.append(f"-{key}")
+        if isinstance(value, list):
             result.append(",".join(str(i) for i in value))
-        else:
-            result.append(f"-{key}")
+        elif not isinstance(value, bool):
             result.append(str(value))
     return result
 
