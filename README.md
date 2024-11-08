@@ -58,7 +58,7 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tr>
 </tbody></table>
             </details><details><summary>entries (<code>int</code>)</summary>
-                <table><tbody><tr><th>Name:</th><td>histogram entries</td></tr><tr><th>Description:</th><td width="500">Set the number of entries of the histogram (default 256)</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
+                <table><tbody><tr><th>Name:</th><td>histogram entries</td></tr><tr><th>Description:</th><td width="500">Set the number of entries of the histogram (default 256)</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td><tr><th>Minimum:</th><td>10</td></tr><tr><th>Maximum:</th><td>9999999</td></tr>
 </tr>
 </tbody></table>
             </details><details><summary>house-keeping (<code>list[<code>int</code>]</code>)</summary>
@@ -102,7 +102,7 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tr>
 </tbody></table>
         </details><details><summary>entries (<code>int</code>)</summary>
-        <table><tbody><tr><th>Name:</th><td>histogram entries</td></tr><tr><th>Description:</th><td width="500">Set the number of entries of the histogram (default 256)</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
+        <table><tbody><tr><th>Name:</th><td>histogram entries</td></tr><tr><th>Description:</th><td width="500">Set the number of entries of the histogram (default 256)</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td><tr><th>Minimum:</th><td>10</td></tr><tr><th>Maximum:</th><td>9999999</td></tr>
 </tr>
 </tbody></table>
         </details><details><summary>house-keeping (<code>list[<code>int</code>]</code>)</summary>
@@ -176,6 +176,9 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
     </details>
 </td></tr></tr>
 </tbody></table>
+            </details><details><summary>time_unit (<code>string</code>)</summary>
+                <table><tbody><tr><th>Name:</th><td>latency unit</td></tr><tr><th>Description:</th><td width="500">Time unit for latency values</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>string</code></td></tr>
+</tbody></table>
             </details><details><summary>total_irq_latency (<code>reference[LatencyStats]</code>)</summary>
                 <table><tbody><tr><th>Name:</th><td>total irq latency</td></tr><tr><th>Description:</th><td width="500">Total IRQ latency</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>reference[LatencyStats]</code></td><tr><th>Referenced object:</th><td>LatencyStats</td></tr></tr>
 </tbody></table>
@@ -224,6 +227,9 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tbody></table>
     </details>
 </td></tr></tr>
+</tbody></table>
+        </details><details><summary>time_unit (<code>string</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>latency unit</td></tr><tr><th>Description:</th><td width="500">Time unit for latency values</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>string</code></td></tr>
 </tbody></table>
         </details><details><summary>total_irq_latency (<code>reference[LatencyStats]</code>)</summary>
         <table><tbody><tr><th>Name:</th><td>total irq latency</td></tr><tr><th>Description:</th><td width="500">Total IRQ latency</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>reference[LatencyStats]</code></td><tr><th>Referenced object:</th><td>LatencyStats</td></tr></tr>
