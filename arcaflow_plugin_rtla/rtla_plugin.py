@@ -130,49 +130,63 @@ class StartTimerlatStep:
         time_unit = ""
         col_headers = []
         latency_hist = []
+        stats_per_col = []
+        accumulator = latency_hist
         total_irq_latency = {}
         total_thr_latency = {}
         total_usr_latency = {}
-        stats_names = ["over:", "count:", "min:", "avg:", "max:"]
-        stats_per_col = []
-        found_all = False
 
+        # found_all = False
         re_isunit = re.compile(r"# Time unit is (\w+)")
-        re_isindex = re.compile(r"^Index")
-        re_isdigit = re.compile(r"^\d")
-        re_isall = re.compile(r"^ALL")
+        re_isindex = re.compile(r"Index")
+        re_isdigit = re.compile(r"\d")
+        re_isall = re.compile(r"ALL")
 
-        for line in output.splitlines():
+        output_lines = output.splitlines()
+        line_num = 0
+
+        # Phase 1: Get the headers
+        for line_num, line in enumerate(output_lines):
+            # Get the time unit (user-selectable)
             if re_isunit.match(line):
                 time_unit = re_isunit.match(line).group(1)
             # Capture the column headers
             elif re_isindex.match(line):
                 col_headers = line.lower().split()
-            # Stats names repeat, so flag when have passed ^ALL
-            elif re_isall.match(line):
-                found_all = True
-            # Either this is a histogram bucket row, or the first time we have seen
-            # a row beginning with a stat name
-            elif (re_isdigit.match(line)) or (
-                line.split()[0] in stats_names and not found_all
-            ):
+                line_num += 1
+                break
+
+        # Phase 2: Get the columnar data
+        for i in range(line_num, len(output_lines)):
+            line_list = output_lines[i].split()
+            row_obj = {}
+            # Collect histogram buckets and column latency statistics
+            if not re_isall.match(line_list[0]):
                 # Capture the columnar data
-                items = line.split()
-                row_obj = dict(zip(col_headers, map(int, items[1:])))
-                row_obj[col_headers[0]] = items[0][:-1]
-                if re_isdigit.match(line):
-                    latency_hist.append(row_obj)
+                if not re_isdigit.match(line_list[0]):
+                    # Stats index values are strings
+                    row_obj[col_headers[0]] = line_list[0][:-1]
+                    accumulator = stats_per_col
                 else:
-                    stats_per_col.append(row_obj)
-            # Since we've encountered the summary statistics (marked by the line
-            # starting with "ALL"), generate key:value pairs instead of columnar data.
-            elif found_all and line.split()[0] in stats_names:
-                label = line.split()[0][:-1]
-                if label != "over":
-                    total_irq_latency[label] = line.split()[1]
-                    total_thr_latency[label] = line.split()[2]
-                    if params.user_threads:
-                        total_usr_latency[label] = line.split()[3]
+                    # Histogram index values are integers
+                    row_obj[col_headers[0]] = int(line_list[0])
+                row_obj = row_obj | dict(zip(col_headers[1:], map(int, line_list[1:])))
+                accumulator.append(row_obj)
+            else:
+                line_num = i + 1
+                break
+
+        # Phase 3: Get the stats summary as key:value pairs
+        for i in range(line_num, len(output_lines)):
+            line_list = output_lines[i].split()
+            label = line_list[0][:-1]
+            total_irq_latency[label] = line_list[1]
+            total_thr_latency[label] = line_list[2]
+            if params.user_threads:
+                total_usr_latency[label] = line_list[3]
+
+        # Provide the rtla command formatted data as debug output
+        print(output)
 
         return "success", TimerlatOutput(
             time_unit,
