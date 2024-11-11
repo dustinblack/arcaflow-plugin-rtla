@@ -137,47 +137,43 @@ class StartTimerlatStep:
         total_usr_latency = {}
 
         is_time_unit = re.compile(r"# Time unit is (\w+)")
-        is_header = re.compile(r"Index")
-        is_digit = re.compile(r"\d")
-        is_summary = re.compile(r"ALL")
 
-        output_lines = output.splitlines()
-        line_num = 0
+        output_lines = iter(output.splitlines())
 
         # Phase 1: Get the headers
-        for line_num, line in enumerate(output_lines):
+        for line in output_lines:
             # Get the time unit (user-selectable)
             if is_time_unit.match(line):
                 time_unit = is_time_unit.match(line).group(1)
             # Capture the column headers
-            elif is_header.match(line):
+            elif line.startswith("Index"):
                 col_headers = line.lower().split()
-                line_num += 1
                 break
 
-        # Phase 2: Get the columnar data
-        for i in range(line_num, len(output_lines)):
-            line_list = output_lines[i].split()
-            row_obj = {}
-            # Collect histogram buckets and column latency statistics
-            if not is_summary.match(line_list[0]):
-                # Capture the columnar data
-                if not is_digit.match(line_list[0]):
-                    # Stats index values are strings
-                    row_obj[col_headers[0]] = line_list[0][:-1]
-                    accumulator = stats_per_col
-                else:
-                    # Histogram index values are integers
-                    row_obj[col_headers[0]] = int(line_list[0])
-                row_obj = row_obj | dict(zip(col_headers[1:], map(int, line_list[1:])))
-                accumulator.append(row_obj)
-            else:
-                line_num = i + 1
+        # Phase 2: Collect histogram buckets and column latency statistics
+        for line in output_lines:
+            line_list = line.split()
+            # Collect statistics up until the summary section
+            # (We don't process the summary header line itself, we just skip it here.)
+            if line_list[0].startswith("ALL"):
                 break
+            row_obj = {}
+            if not line_list[0].isdigit():
+                # Stats index values are strings ending in a colon
+                row_obj[col_headers[0]] = line_list[0][:-1]
+                # When we hit the stats, switch to the other accumulator
+                accumulator = stats_per_col
+            else:
+                # Histogram index values are integers
+                row_obj[col_headers[0]] = int(line_list[0])
+            # Merge the dicts so that the 'index' column is (probably) first in the
+            # output display just for human-friendliness
+            row_obj = row_obj | dict(zip(col_headers[1:], map(int, line_list[1:])))
+            accumulator.append(row_obj)
 
         # Phase 3: Get the stats summary as key:value pairs
-        for i in range(line_num, len(output_lines)):
-            line_list = output_lines[i].split()
+        for line in output_lines:
+            line_list = line.split()
             label = line_list[0][:-1]
             total_irq_latency[label] = line_list[1]
             total_thr_latency[label] = line_list[2]
