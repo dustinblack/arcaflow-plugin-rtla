@@ -28,4 +28,4 @@ jobs:
       contents: write
       pull-requests: write
     with:
-      plugin_path: "arcaflow_plugin_template_python/template_python_plugin.py"
+      plugin_path: "arcaflow_plugin_rtla/rtla_plugin.py"

@@ -1,11 +1,13 @@
 # Package path for this plugin module relative to the repo root
-ARG package=arcaflow_plugin_template_python
+ARG package=arcaflow_plugin_rtla
 
 # STAGE 1 -- Build module dependencies and run tests
 # The 'poetry' and 'coverage' modules are installed and verson-controlled in the
 # quay.io/arcalot/arcaflow-plugin-baseimage-python-buildbase image to limit drift
 FROM quay.io/arcalot/arcaflow-plugin-baseimage-python-buildbase:0.4.2 as build
 ARG package
+
+RUN dnf -y install rtla
 
 COPY poetry.lock /app/
 COPY pyproject.toml /app/
@@ -29,6 +31,8 @@ RUN python -m coverage run tests/test_${package}.py \
 FROM quay.io/arcalot/arcaflow-plugin-baseimage-python-osbase:0.4.2
 ARG package
 
+RUN dnf -y install rtla
+
 COPY --from=build /app/requirements.txt /app/
 COPY --from=build /htmlcov /htmlcov/
 COPY LICENSE /app/
@@ -40,12 +44,12 @@ RUN python -m pip install -r requirements.txt
 
 WORKDIR /app/${package}
 
-ENTRYPOINT ["python", "template_python_plugin.py"]
+ENTRYPOINT ["python", "rtla_plugin.py"]
 CMD []
 
-LABEL org.opencontainers.image.source="https://github.com/arcalot/arcaflow-plugin-template-python"
+LABEL org.opencontainers.image.source="https://github.com/arcalot/arcaflow-plugin-rtla"
 LABEL org.opencontainers.image.licenses="Apache-2.0+GPL-2.0-only"
 LABEL org.opencontainers.image.vendor="Arcalot project"
 LABEL org.opencontainers.image.authors="Arcalot contributors"
-LABEL org.opencontainers.image.title="Python Plugin Template"
+LABEL org.opencontainers.image.title="Python Plugin rtla"
 LABEL io.github.arcalot.arcaflow.plugin.version="1"
