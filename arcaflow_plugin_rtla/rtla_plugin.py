@@ -136,11 +136,10 @@ class StartTimerlatStep:
         total_thr_latency = {}
         total_usr_latency = {}
 
-        # found_all = False
-        re_isunit = re.compile(r"# Time unit is (\w+)")
-        re_isindex = re.compile(r"Index")
-        re_isdigit = re.compile(r"\d")
-        re_isall = re.compile(r"ALL")
+        is_time_unit = re.compile(r"# Time unit is (\w+)")
+        is_header = re.compile(r"Index")
+        is_digit = re.compile(r"\d")
+        is_summary = re.compile(r"ALL")
 
         output_lines = output.splitlines()
         line_num = 0
@@ -148,10 +147,10 @@ class StartTimerlatStep:
         # Phase 1: Get the headers
         for line_num, line in enumerate(output_lines):
             # Get the time unit (user-selectable)
-            if re_isunit.match(line):
-                time_unit = re_isunit.match(line).group(1)
+            if is_time_unit.match(line):
+                time_unit = is_time_unit.match(line).group(1)
             # Capture the column headers
-            elif re_isindex.match(line):
+            elif is_header.match(line):
                 col_headers = line.lower().split()
                 line_num += 1
                 break
@@ -161,9 +160,9 @@ class StartTimerlatStep:
             line_list = output_lines[i].split()
             row_obj = {}
             # Collect histogram buckets and column latency statistics
-            if not re_isall.match(line_list[0]):
+            if not is_summary.match(line_list[0]):
                 # Capture the columnar data
-                if not re_isdigit.match(line_list[0]):
+                if not is_digit.match(line_list[0]):
                     # Stats index values are strings
                     row_obj[col_headers[0]] = line_list[0][:-1]
                     accumulator = stats_per_col
