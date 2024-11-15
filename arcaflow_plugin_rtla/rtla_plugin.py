@@ -9,23 +9,10 @@ from arcaflow_plugin_sdk import plugin, predefined_schemas
 from rtla_schema import (
     TimerlatInputParams,
     latency_stats_schema,
+    latency_timeseries_schema,
     TimerlatOutput,
     ErrorOutput,
 )
-
-
-def run_oneshot_cmd(command_list: list[str]) -> tuple[str, subprocess.CompletedProcess]:
-    try:
-        cmd_out = subprocess.check_output(
-            command_list,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
-    except subprocess.CalledProcessError as err:
-        return "error", ErrorOutput(
-            f"{err.cmd[0]} failed with return code {err.returncode}:\n{err.output}"
-        )
-    return "completed", cmd_out
 
 
 class StartTimerlatStep:
@@ -66,7 +53,7 @@ class StartTimerlatStep:
         timerlat_cmd.extend(params.to_flags())
 
         try:
-            proc = subprocess.Popen(
+            timerlat_proc = subprocess.Popen(
                 timerlat_cmd,
                 start_new_session=True,
                 stdout=subprocess.PIPE,
@@ -77,6 +64,26 @@ class StartTimerlatStep:
             return "error", ErrorOutput(
                 f"{err.cmd[0]} failed with return code {err.returncode}:\n{err.output}"
             )
+
+        if params.enable_timeseries:
+            timeseries_cmd = [
+                "cat",
+                "/sys/kernel/debug/tracing/instances/timerlat_hist/trace_pipe",
+            ]
+
+            try:
+                timeseries_proc = subprocess.Popen(
+                    timeseries_cmd,
+                    start_new_session=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            except subprocess.CalledProcessError as err:
+                return "error", ErrorOutput(
+                    f"""{err.cmd[0]} failed with return code {err.returncode}:\n
+                    {err.output}"""
+                )
 
         try:
             # Block here, waiting on the cancel signal
@@ -92,9 +99,14 @@ class StartTimerlatStep:
         # In either the case of a keyboard interrupt or a cancel signal, we need to
         # send the SIGINT to the subprocess.
         if self.finished_early:
-            proc.send_signal(2)
+            timerlat_proc.send_signal(2)
 
-        output, _ = proc.communicate()
+        if params.enable_timeseries:
+            # Interrupt the timeseries collection process and capture the output
+            timeseries_proc.send_signal(2)
+            timeseries_output, _ = timeseries_proc.communicate()
+
+        timerlat_output, _ = timerlat_proc.communicate()
 
         # The output from the `rtla timerlat hist` command is columnar in three
         # sections, plus headers. The first section is histogram data, which will
@@ -138,7 +150,7 @@ class StartTimerlatStep:
 
         is_time_unit = re.compile(r"# Time unit is (\w+)")
 
-        output_lines = iter(output.splitlines())
+        output_lines = iter(timerlat_output.splitlines())
 
         # Phase 1: Get the headers
         for line in output_lines:
@@ -181,7 +193,43 @@ class StartTimerlatStep:
                 total_usr_latency[label] = line_list[3]
 
         # Provide the rtla command formatted data as debug output
-        print(output)
+        print(timerlat_output)
+
+        # Example time series output from the tracer (truncated)
+        # <idle>-0      [009] d. 123.769498: #1002 context    irq timer_latency  458 ns
+        #  <...>-625890 [009] .. 123.769499: #1002 context thread timer_latency 666 ns
+        #  <...>-625890 [009] .. 123.769500: #1002 context user-ret timer_latency 499 ns
+        # <idle>-0      [002] d. 123.769528: #1003 context    irq timer_latency  587 ns
+        #  <...>-625883 [002] .. 123.769532: #1003 context thread timer_latency 712 ns
+        #  <...>-625883 [002] .. 123.769534: #1003 context user-ret timer_latency 462 ns
+
+        # FIXME -- Since the tracer output format is determined by the underlying
+        # operating system and kernel, we can't know for sure that the output is
+        # available and in the expected format. Add a validation here with a graceful
+        # exception.
+
+        if params.enable_timeseries:
+            timeseries_lines = iter(timeseries_output.splitlines())
+            timeseries_dict = {}
+
+            for line in timeseries_lines:
+                line_list = line.split()
+                cpu = line_list[1][1:-1]
+                # The trace collects for all CPUs, so skip any CPU we did not select
+                if params.cpus and int(cpu) not in params.cpus:
+                    continue
+                # We want a separate timeseries for each CPU + context combination
+                context = f"cpu{cpu}_{line_list[6]}"
+                if context not in timeseries_dict:
+                    timeseries_dict[context] = []
+                timeseries_dict[context].append(
+                    latency_timeseries_schema.unserialize(
+                        {
+                            "timestamp": line_list[3][:-1],
+                            "latency_ns": line_list[8],
+                        }
+                    )
+                )
 
         return "success", TimerlatOutput(
             time_unit,
@@ -194,6 +242,7 @@ class StartTimerlatStep:
                 if params.user_threads
                 else None
             ),
+            (timeseries_dict if params.enable_timeseries else None),
         )
 
 
