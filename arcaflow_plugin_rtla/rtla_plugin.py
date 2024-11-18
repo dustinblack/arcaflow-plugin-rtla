@@ -4,6 +4,7 @@ import subprocess
 import re
 import sys
 import typing
+import os.path
 import time
 from threading import Event
 from datetime import datetime
@@ -68,24 +69,41 @@ class StartTimerlatStep:
             )
 
         if params.enable_time_series:
-            timeseries_cmd = [
-                "cat",
-                "/sys/kernel/debug/tracing/instances/timerlat_hist/trace_pipe",
-            ]
+            timeseries_dict = {}
+            trace_path = "/sys/kernel/debug/tracing/instances/timerlat_hist/trace_pipe"
 
-            try:
-                timeseries_proc = subprocess.Popen(
-                    timeseries_cmd,
-                    start_new_session=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
+            timeseries_cmd = ["cat", trace_path]
+
+            # A delay is needed before reading from the trace_path to ensure the file
+            # exists and data is streaming to the pipe. I've tried to avoid a sleep(),
+            # but none of the methods I've tested have worked.
+            wait_time = 0
+            timeout_seconds = 5
+            sleep_time = 0.5
+            trace_file_exists = False
+            while not trace_file_exists and wait_time < timeout_seconds:
+                time.sleep(sleep_time)
+                trace_file_exists = os.path.isfile(trace_path)
+                wait_time += sleep_time
+
+            if not trace_file_exists:
+                print(
+                    "Unable to read tracer output; " "Skipping time series collection\n"
                 )
-            except subprocess.CalledProcessError as err:
-                return "error", ErrorOutput(
-                    f"""{err.cmd[0]} failed with return code {err.returncode}:\n
-                    {err.output}"""
-                )
+            else:
+                try:
+                    timeseries_proc = subprocess.Popen(
+                        timeseries_cmd,
+                        start_new_session=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                    )
+                except subprocess.CalledProcessError as err:
+                    return "error", ErrorOutput(
+                        f"""{err.cmd[0]} failed with return code {err.returncode}:\n
+                        {err.output}"""
+                    )
 
         try:
             # Block here, waiting on the cancel signal
@@ -103,7 +121,7 @@ class StartTimerlatStep:
         if self.finished_early:
             timerlat_proc.send_signal(2)
 
-        if params.enable_time_series:
+        if params.enable_time_series and trace_file_exists:
             # Interrupt the time series collection process and capture the output
             timeseries_proc.send_signal(2)
             timeseries_output, _ = timeseries_proc.communicate()
@@ -205,9 +223,8 @@ class StartTimerlatStep:
         #  <...>-625883 [002] .. 123.769532: #1003 context thread timer_latency 712 ns
         #  <...>-625883 [002] .. 123.769534: #1003 context user-ret timer_latency 462 ns
 
-        if params.enable_time_series:
+        if params.enable_time_series and trace_file_exists:
             timeseries_lines = iter(timeseries_output.splitlines())
-            timeseries_dict = {}
 
             # The calculation of the offset from uptime to current time certainly means
             # that our time series is not 100% accurately aligned to the nanosecond, but
