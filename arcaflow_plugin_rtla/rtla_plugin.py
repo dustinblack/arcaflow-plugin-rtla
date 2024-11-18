@@ -67,7 +67,7 @@ class StartTimerlatStep:
                 f"{err.cmd[0]} failed with return code {err.returncode}:\n{err.output}"
             )
 
-        if params.enable_timeseries:
+        if params.enable_time_series:
             timeseries_cmd = [
                 "cat",
                 "/sys/kernel/debug/tracing/instances/timerlat_hist/trace_pipe",
@@ -103,7 +103,7 @@ class StartTimerlatStep:
         if self.finished_early:
             timerlat_proc.send_signal(2)
 
-        if params.enable_timeseries:
+        if params.enable_time_series:
             # Interrupt the time series collection process and capture the output
             timeseries_proc.send_signal(2)
             timeseries_output, _ = timeseries_proc.communicate()
@@ -205,7 +205,7 @@ class StartTimerlatStep:
         #  <...>-625883 [002] .. 123.769532: #1003 context thread timer_latency 712 ns
         #  <...>-625883 [002] .. 123.769534: #1003 context user-ret timer_latency 462 ns
 
-        if params.enable_timeseries:
+        if params.enable_time_series:
             timeseries_lines = iter(timeseries_output.splitlines())
             timeseries_dict = {}
 

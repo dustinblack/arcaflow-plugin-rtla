@@ -67,11 +67,11 @@ class TimerlatInputParams:
             "Use rtla user-space threads instead of kernel-space timerlat threads"
         ),
     ] = None
-    enable_timeseries: typing.Annotated[
+    enable_time_series: typing.Annotated[
         typing.Optional[bool],
-        schema.id("enable-timeseries"),
-        schema.name("enable timeseries"),
-        schema.description("Enable collection of latency timeseries data."),
+        schema.id("enable-time-series"),
+        schema.name("enable time series"),
+        schema.description("Enable collection of latency time series data."),
     ] = False
 
     def to_flags(self) -> str:
@@ -117,7 +117,7 @@ latency_stats_schema = plugin.build_object_schema(LatencyStats)
 
 
 @dataclass
-class LatencyTimeseries:
+class LatencyTimeSeries:
     timestamp: typing.Annotated[
         str,
         schema.name("timestamp"),
@@ -130,7 +130,7 @@ class LatencyTimeseries:
     ] = None
 
 
-latency_timeseries_schema = plugin.build_object_schema(LatencyTimeseries)
+latency_timeseries_schema = plugin.build_object_schema(LatencyTimeSeries)
 
 
 @dataclass
@@ -165,10 +165,10 @@ class TimerlatOutput:
         schema.name("total usr latency"),
         schema.description("Total user latency"),
     ] = None
-    latency_timeseries: typing.Annotated[
-        typing.Optional[typing.Dict[str, typing.List[LatencyTimeseries]]],
-        schema.name("latency timeseries"),
-        schema.description("Timeseries of latencies for each CPU and context"),
+    latency_time_series: typing.Annotated[
+        typing.Optional[typing.Dict[str, typing.List[LatencyTimeSeries]]],
+        schema.name("latency time series"),
+        schema.description("Time series of latencies for each CPU and context"),
     ] = None
 
 
