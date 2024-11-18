@@ -272,9 +272,8 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
         <table><tbody><tr><th>Name:</th><td>latency in ns</td></tr><tr><th>Description:</th><td width="500">CPU latency value in nanoseconds</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
 </tr>
 </tbody></table>
-        </details><details><summary>timestamp (<code>float</code>)</summary>
-        <table><tbody><tr><th>Name:</th><td>timestamp</td></tr><tr><th>Description:</th><td width="500">CPU latency timestamp</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>float</code></td>
-</tr>
+        </details><details><summary>timestamp (<code>string</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>timestamp</td></tr><tr><th>Description:</th><td width="500">CPU latency timestamp</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>string</code></td></tr>
 </tbody></table>
         </details></td></tr>
 </tr>
