@@ -118,7 +118,7 @@ latency_stats_schema = plugin.build_object_schema(LatencyStats)
 @dataclass
 class LatencyTimeseries:
     timestamp: typing.Annotated[
-        float,
+        str,
         schema.name("timestamp"),
         schema.description("CPU latency timestamp"),
     ] = None

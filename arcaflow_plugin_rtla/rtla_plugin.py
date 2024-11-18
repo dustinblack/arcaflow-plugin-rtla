@@ -4,7 +4,9 @@ import subprocess
 import re
 import sys
 import typing
+import time
 from threading import Event
+from datetime import datetime
 from arcaflow_plugin_sdk import plugin, predefined_schemas
 from rtla_schema import (
     TimerlatInputParams,
@@ -87,7 +89,7 @@ class StartTimerlatStep:
 
         try:
             # Block here, waiting on the cancel signal
-            print("Gathering data... Use Ctrl-C to stop.")
+            print("Gathering data... Use Ctrl-C to stop.\n")
             self.exit.wait(params.duration)
 
         # Secondary block interrupt is via the KeyboardInterrupt exception.
@@ -203,30 +205,49 @@ class StartTimerlatStep:
         #  <...>-625883 [002] .. 123.769532: #1003 context thread timer_latency 712 ns
         #  <...>-625883 [002] .. 123.769534: #1003 context user-ret timer_latency 462 ns
 
-        # FIXME -- Since the tracer output format is determined by the underlying
-        # operating system and kernel, we can't know for sure that the output is
-        # available and in the expected format. Add a validation here with a graceful
-        # exception.
-
         if params.enable_timeseries:
             timeseries_lines = iter(timeseries_output.splitlines())
             timeseries_dict = {}
 
+            # The calculation of the offset from uptime to current time certainly means
+            # that our timeseries is not 100% accurately aligned to the nanosecond, but
+            # the relative times will be accurate. We'll accept this as good enough.
+            uptime_offset = time.time() - time.monotonic()
+
             for line in timeseries_lines:
                 line_list = line.split()
-                cpu = line_list[1][1:-1]
+                # Because the tracer format is dependent on the underlying OS and cannot
+                # be controlled by the container, check the tracer output format and
+                # break gracefully if we don't recognize it
+                try:
+                    cpu = int(line_list[1][1:-1])
+                    uptimestamp = float(line_list[3][:-1])
+                    timestamp = str(
+                        datetime.fromtimestamp(uptimestamp + uptime_offset)
+                        .astimezone()
+                        .isoformat()
+                    )
+                    context = str(line_list[6])
+                    latency = int(line_list[8])
+
+                except (IndexError, ValueError):
+                    print("Unknown tracer format; Skipping time series collection\n")
+                    timeseries_dict = {}
+                    break
+
                 # The trace collects for all CPUs, so skip any CPU we did not select
+                # via the input to the plugin
                 if params.cpus and int(cpu) not in params.cpus:
                     continue
-                # We want a separate timeseries for each CPU + context combination
-                context = f"cpu{cpu}_{line_list[6]}"
-                if context not in timeseries_dict:
-                    timeseries_dict[context] = []
-                timeseries_dict[context].append(
+                # Create a separate timeseries for each CPU + context combination
+                cpu_context = f"cpu{cpu}_{context}"
+                if cpu_context not in timeseries_dict:
+                    timeseries_dict[cpu_context] = []
+                timeseries_dict[cpu_context].append(
                     latency_timeseries_schema.unserialize(
                         {
-                            "timestamp": line_list[3][:-1],
-                            "latency_ns": line_list[8],
+                            "timestamp": timestamp,
+                            "latency_ns": latency,
                         }
                     )
                 )
