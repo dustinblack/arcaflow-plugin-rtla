@@ -104,7 +104,7 @@ class StartTimerlatStep:
             timerlat_proc.send_signal(2)
 
         if params.enable_timeseries:
-            # Interrupt the timeseries collection process and capture the output
+            # Interrupt the time series collection process and capture the output
             timeseries_proc.send_signal(2)
             timeseries_output, _ = timeseries_proc.communicate()
 
@@ -210,9 +210,15 @@ class StartTimerlatStep:
             timeseries_dict = {}
 
             # The calculation of the offset from uptime to current time certainly means
-            # that our timeseries is not 100% accurately aligned to the nanosecond, but
+            # that our time series is not 100% accurately aligned to the nanosecond, but
             # the relative times will be accurate. We'll accept this as good enough.
             uptime_offset = time.time() - time.monotonic()
+
+            if all(False for _ in timeseries_lines):
+                print(
+                    "No results reading tracer output; "
+                    "Skipping time series collection\n"
+                )
 
             for line in timeseries_lines:
                 line_list = line.split()
@@ -239,7 +245,7 @@ class StartTimerlatStep:
                 # via the input to the plugin
                 if params.cpus and int(cpu) not in params.cpus:
                     continue
-                # Create a separate timeseries for each CPU + context combination
+                # Create a separate time series for each CPU + context combination
                 cpu_context = f"cpu{cpu}_{context}"
                 if cpu_context not in timeseries_dict:
                     timeseries_dict[cpu_context] = []
@@ -263,7 +269,7 @@ class StartTimerlatStep:
                 if params.user_threads
                 else None
             ),
-            (timeseries_dict if params.enable_timeseries else None),
+            (timeseries_dict if params.enable_time_series else None),
         )
 
 
