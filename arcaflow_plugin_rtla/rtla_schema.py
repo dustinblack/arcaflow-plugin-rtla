@@ -69,6 +69,7 @@ class TimerlatInputParams:
     ] = None
     enable_timeseries: typing.Annotated[
         typing.Optional[bool],
+        schema.id("enable-timeseries"),
         schema.name("enable timeseries"),
         schema.description("Enable collection of latency timeseries data."),
     ] = False
