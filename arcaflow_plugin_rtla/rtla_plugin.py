@@ -248,14 +248,15 @@ class StartTimerlatStep:
                     for i, _ in enumerate(line_list):
                         if i == 1:
                             try:
-                                cpu = int(line_list[i][1:-1])
+                                cpu_val = re.compile(r"\[([0-9][0-9][0-9])\]")
+                                cpu = int(cpu_val.match(line_list[i]).group(1))
                                 break
-                            except ValueError:
+                            except (ValueError, AttributeError):
                                 line_list.pop(i)
-                            except IndexError:
+                            except IndexError as error:
                                 print(
-                                    "Unknown tracer format; Skipping time series "
-                                    f"collection: \n {line}"
+                                    "Unable to determine CPU number; Skipping time "
+                                    f"series collection: {error}\n{line}"
                                 )
                                 timeseries_dict = {}
                                 break
