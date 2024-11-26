@@ -4,7 +4,6 @@ import subprocess
 import re
 import sys
 import typing
-import os.path
 import time
 from threading import Event
 from datetime import datetime
@@ -73,28 +72,31 @@ class StartTimerlatStep:
             last_uptimestamp = {}
             trace_path = "/sys/kernel/debug/tracing/instances/timerlat_hist/trace_pipe"
 
-            timeseries_cmd = ["cat", trace_path]
-
             # A delay is needed before reading from the trace_path to ensure the file
             # exists and data is streaming to the fifo. I've tried to avoid a sleep(),
             # but none of the methods I've tested have worked.
             wait_time = 0
             timeout_seconds = 5
             sleep_time = 0.5
-            trace_file_exists = False
-            while not trace_file_exists and wait_time < timeout_seconds:
-                time.sleep(sleep_time)
-                trace_file_exists = os.path.isfile(trace_path)
-                wait_time += sleep_time
+            trace_file = False
+            while wait_time < timeout_seconds:
+                try:
+                    trace_file = open(trace_path, "r")
+                    break
+                except FileNotFoundError:
+                    time.sleep(sleep_time)
+                    wait_time += sleep_time
+                    continue
 
-            if not trace_file_exists:
+            if not trace_file:
                 print("Unable to read tracer output; Skipping time series collection\n")
             else:
                 timeseries_file = open("./timeseries_file", "w")
                 try:
                     timeseries_proc = subprocess.Popen(
-                        timeseries_cmd,
+                        ["cat"],
                         start_new_session=True,
+                        stdin=trace_file,
                         stdout=timeseries_file,
                         stderr=subprocess.PIPE,
                         text=True,
@@ -121,10 +123,11 @@ class StartTimerlatStep:
         if self.finished_early:
             timerlat_proc.send_signal(2)
 
-        if params.enable_time_series and trace_file_exists:
+        if params.enable_time_series and trace_file:
             # Interrupt the time series collection process and capture the output
             timeseries_proc.send_signal(2)
             timeseries_file.close()
+            trace_file.close()
 
         timerlat_output, _ = timerlat_proc.communicate()
 
@@ -223,7 +226,7 @@ class StartTimerlatStep:
         #  <...>-625883 [002] .. 123.769532: #1003 context thread timer_latency 712 ns
         #  <...>-625883 [002] .. 123.769534: #1003 context user-ret timer_latency 462 ns
 
-        if params.enable_time_series and trace_file_exists:
+        if params.enable_time_series and trace_file:
 
             # The calculation of the offset from uptime to current time certainly means
             # that our time series is not 100% accurately aligned to the nanosecond, but
