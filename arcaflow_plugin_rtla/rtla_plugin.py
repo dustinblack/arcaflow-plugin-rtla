@@ -123,11 +123,101 @@ class StartTimerlatStep:
         if self.finished_early:
             timerlat_proc.send_signal(2)
 
+        # Example time series output from the tracer (truncated)
+        # <idle>-0      [009] d. 123.769498: #1002 context    irq timer_latency  458 ns
+        #  <...>-625890 [009] .. 123.769499: #1002 context thread timer_latency 666 ns
+        #  <...>-625890 [009] .. 123.769500: #1002 context user-ret timer_latency 499 ns
+        # <idle>-0      [002] d. 123.769528: #1003 context    irq timer_latency  587 ns
+        #  <...>-625883 [002] .. 123.769532: #1003 context thread timer_latency 712 ns
+        #  <...>-625883 [002] .. 123.769534: #1003 context user-ret timer_latency 462 ns
+
         if params.enable_time_series and trace_file:
             # Interrupt the time series collection process and capture the output
             timeseries_proc.send_signal(2)
             timeseries_file.close()
             trace_file.close()
+
+            # The calculation of the offset from uptime to current time certainly means
+            # that our time series is not 100% accurately aligned to the nanosecond, but
+            # the relative times will be accurate. We'll accept this as good enough.
+            uptime_offset = time.time() - time.monotonic()
+
+            with open("./timeseries_file") as timeseries_output:
+
+                if all(False for _ in timeseries_output):
+                    print(
+                        "No results reading tracer output; "
+                        "Skipping time series collection\n"
+                    )
+
+                for line in timeseries_output:
+                    line_list = line.split()
+
+                    # The first object in the line is a string, and it is possible for
+                    # it to have spaces in it. We'll try to cast the second object,
+                    # which should be the CPU number surrounded with [], to an int. If
+                    # that fails, we discard that object from the line_list.
+                    for i, _ in enumerate(line_list):
+                        if i == 1:
+                            try:
+                                cpu_val = re.compile(r"\[([0-9][0-9][0-9])\]")
+                                cpu = int(cpu_val.match(line_list[i]).group(1))
+                                break
+                            except (ValueError, AttributeError):
+                                line_list.pop(i)
+                            except IndexError as error:
+                                print(
+                                    "Unable to determine CPU number; Skipping time "
+                                    f"series collection: {error}\n{line}"
+                                )
+                                timeseries_dict = {}
+                                break
+
+                    # Because the tracer format is dependent on the underlying OS and
+                    # cannot be controlled by the container, check the tracer output
+                    # format and break gracefully if we don't recognize it
+                    try:
+                        uptimestamp = float(line_list[3][:-1])
+                        timestamp = str(
+                            datetime.fromtimestamp(uptimestamp + uptime_offset)
+                            .astimezone()
+                            .isoformat()
+                        )
+                        context = str(line_list[6])
+                        latency = int(line_list[8])
+
+                    except (IndexError, ValueError) as error:
+                        print(
+                            "Unknown tracer format; Skipping time series collection: "
+                            f"{error}\n{line}"
+                        )
+                        timeseries_dict = {}
+                        break
+
+                    # The trace collects for all CPUs, so skip any CPU we did not select
+                    # via the input to the plugin
+                    if params.cpus and int(cpu) not in params.cpus:
+                        continue
+                    # Create a separate time series for each CPU + context combination
+                    cpu_context = f"cpu{cpu}_{context}"
+                    if cpu_context not in timeseries_dict:
+                        timeseries_dict[cpu_context] = []
+                    if cpu_context not in last_uptimestamp:
+                        last_uptimestamp[cpu_context] = 0
+                    if last_uptimestamp[cpu_context] and (
+                        uptimestamp - last_uptimestamp[cpu_context]
+                        < params.time_series_resolution
+                    ):
+                        continue
+                    last_uptimestamp[cpu_context] = uptimestamp
+                    timeseries_dict[cpu_context].append(
+                        latency_timeseries_schema.unserialize(
+                            {
+                                "timestamp": timestamp,
+                                "latency_ns": latency,
+                            }
+                        )
+                    )
 
         timerlat_output = timerlat_proc.stdout.read()
 
@@ -217,98 +307,6 @@ class StartTimerlatStep:
 
         # Provide the rtla command formatted data as debug output
         print(timerlat_output)
-
-        # Example time series output from the tracer (truncated)
-        # <idle>-0      [009] d. 123.769498: #1002 context    irq timer_latency  458 ns
-        #  <...>-625890 [009] .. 123.769499: #1002 context thread timer_latency 666 ns
-        #  <...>-625890 [009] .. 123.769500: #1002 context user-ret timer_latency 499 ns
-        # <idle>-0      [002] d. 123.769528: #1003 context    irq timer_latency  587 ns
-        #  <...>-625883 [002] .. 123.769532: #1003 context thread timer_latency 712 ns
-        #  <...>-625883 [002] .. 123.769534: #1003 context user-ret timer_latency 462 ns
-
-        if params.enable_time_series and trace_file:
-
-            # The calculation of the offset from uptime to current time certainly means
-            # that our time series is not 100% accurately aligned to the nanosecond, but
-            # the relative times will be accurate. We'll accept this as good enough.
-            uptime_offset = time.time() - time.monotonic()
-
-            with open("./timeseries_file") as timeseries_output:
-
-                if all(False for _ in timeseries_output):
-                    print(
-                        "No results reading tracer output; "
-                        "Skipping time series collection\n"
-                    )
-
-                for line in timeseries_output:
-                    line_list = line.split()
-
-                    # The first object in the line is a string, and it is possible for
-                    # it to have spaces in it. We'll try to cast the second object,
-                    # which should be the CPU number surrounded with [], to an int. If
-                    # that fails, we discard that object from the line_list.
-                    for i, _ in enumerate(line_list):
-                        if i == 1:
-                            try:
-                                cpu_val = re.compile(r"\[([0-9][0-9][0-9])\]")
-                                cpu = int(cpu_val.match(line_list[i]).group(1))
-                                break
-                            except (ValueError, AttributeError):
-                                line_list.pop(i)
-                            except IndexError as error:
-                                print(
-                                    "Unable to determine CPU number; Skipping time "
-                                    f"series collection: {error}\n{line}"
-                                )
-                                timeseries_dict = {}
-                                break
-
-                    # Because the tracer format is dependent on the underlying OS and
-                    # cannot be controlled by the container, check the tracer output
-                    # format and break gracefully if we don't recognize it
-                    try:
-                        uptimestamp = float(line_list[3][:-1])
-                        timestamp = str(
-                            datetime.fromtimestamp(uptimestamp + uptime_offset)
-                            .astimezone()
-                            .isoformat()
-                        )
-                        context = str(line_list[6])
-                        latency = int(line_list[8])
-
-                    except (IndexError, ValueError) as error:
-                        print(
-                            "Unknown tracer format; Skipping time series collection: "
-                            f"{error}\n{line}"
-                        )
-                        timeseries_dict = {}
-                        break
-
-                    # The trace collects for all CPUs, so skip any CPU we did not select
-                    # via the input to the plugin
-                    if params.cpus and int(cpu) not in params.cpus:
-                        continue
-                    # Create a separate time series for each CPU + context combination
-                    cpu_context = f"cpu{cpu}_{context}"
-                    if cpu_context not in timeseries_dict:
-                        timeseries_dict[cpu_context] = []
-                    if cpu_context not in last_uptimestamp:
-                        last_uptimestamp[cpu_context] = 0
-                    if last_uptimestamp[cpu_context] and (
-                        uptimestamp - last_uptimestamp[cpu_context]
-                        < params.time_series_resolution
-                    ):
-                        continue
-                    last_uptimestamp[cpu_context] = uptimestamp
-                    timeseries_dict[cpu_context].append(
-                        latency_timeseries_schema.unserialize(
-                            {
-                                "timestamp": timestamp,
-                                "latency_ns": latency,
-                            }
-                        )
-                    )
 
         return "success", TimerlatOutput(
             time_unit,
