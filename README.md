@@ -58,7 +58,7 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tr>
 </tbody></table>
             </details><details><summary>enable-time-series (<code>bool</code>)</summary>
-                <table><tbody><tr><th>Name:</th><td>enable time series</td></tr><tr><th>Description:</th><td width="500">Enable collection of latency time series data.</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>false</code></pre></td></tr><tr><th>Type:</th><td><code>bool</code></td></tr>
+                <table><tbody><tr><th>Name:</th><td>enable time series</td></tr><tr><th>Description:</th><td width="500">Enable collection of latency time series data</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>false</code></pre></td></tr><tr><th>Type:</th><td><code>bool</code></td></tr>
 </tbody></table>
             </details><details><summary>entries (<code>int</code>)</summary>
                 <table><tbody><tr><th>Name:</th><td>histogram entries</td></tr><tr><th>Description:</th><td width="500">Set the number of entries of the histogram (default 256)</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td><tr><th>Minimum:</th><td>10</td></tr><tr><th>Maximum:</th><td>9999999</td></tr>
@@ -79,6 +79,10 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tbody></table>
             </details><details><summary>period (<code>int</code>)</summary>
                 <table><tbody><tr><th>Name:</th><td>timerlat period</td></tr><tr><th>Description:</th><td width="500">Timerlat period in μs</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
+</tr>
+</tbody></table>
+            </details><details><summary>time-series-resolution (<code>float</code>)</summary>
+                <table><tbody><tr><th>Name:</th><td>time series resolution</td></tr><tr><th>Description:</th><td width="500">Minimum time in seconds between time series entries</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>1.0</code></pre></td></tr><tr><th>Type:</th><td><code>float</code></td>
 </tr>
 </tbody></table>
             </details><details><summary>user-threads (<code>bool</code>)</summary>
@@ -105,7 +109,7 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tr>
 </tbody></table>
         </details><details><summary>enable-time-series (<code>bool</code>)</summary>
-        <table><tbody><tr><th>Name:</th><td>enable time series</td></tr><tr><th>Description:</th><td width="500">Enable collection of latency time series data.</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>false</code></pre></td></tr><tr><th>Type:</th><td><code>bool</code></td></tr>
+        <table><tbody><tr><th>Name:</th><td>enable time series</td></tr><tr><th>Description:</th><td width="500">Enable collection of latency time series data</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>false</code></pre></td></tr><tr><th>Type:</th><td><code>bool</code></td></tr>
 </tbody></table>
         </details><details><summary>entries (<code>int</code>)</summary>
         <table><tbody><tr><th>Name:</th><td>histogram entries</td></tr><tr><th>Description:</th><td width="500">Set the number of entries of the histogram (default 256)</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td><tr><th>Minimum:</th><td>10</td></tr><tr><th>Maximum:</th><td>9999999</td></tr>
@@ -126,6 +130,10 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tbody></table>
         </details><details><summary>period (<code>int</code>)</summary>
         <table><tbody><tr><th>Name:</th><td>timerlat period</td></tr><tr><th>Description:</th><td width="500">Timerlat period in μs</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
+</tr>
+</tbody></table>
+        </details><details><summary>time-series-resolution (<code>float</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>time series resolution</td></tr><tr><th>Description:</th><td width="500">Minimum time in seconds between time series entries</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>1.0</code></pre></td></tr><tr><th>Type:</th><td><code>float</code></td>
 </tr>
 </tbody></table>
         </details><details><summary>user-threads (<code>bool</code>)</summary>
