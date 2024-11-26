@@ -71,8 +71,14 @@ class TimerlatInputParams:
         typing.Optional[bool],
         schema.id("enable-time-series"),
         schema.name("enable time series"),
-        schema.description("Enable collection of latency time series data."),
+        schema.description("Enable collection of latency time series data"),
     ] = False
+    time_series_resolution: typing.Annotated[
+        typing.Optional[float],
+        schema.id("time-series-resolution"),
+        schema.name("time series resolution"),
+        schema.description("Minimum time in seconds between time series entries"),
+    ] = 1.0
 
     def to_flags(self) -> str:
         return params_to_flags(

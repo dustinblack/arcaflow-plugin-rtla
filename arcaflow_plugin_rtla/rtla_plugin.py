@@ -70,12 +70,13 @@ class StartTimerlatStep:
 
         if params.enable_time_series:
             timeseries_dict = {}
+            last_uptimestamp = {}
             trace_path = "/sys/kernel/debug/tracing/instances/timerlat_hist/trace_pipe"
 
             timeseries_cmd = ["cat", trace_path]
 
             # A delay is needed before reading from the trace_path to ensure the file
-            # exists and data is streaming to the pipe. I've tried to avoid a sleep(),
+            # exists and data is streaming to the fifo. I've tried to avoid a sleep(),
             # but none of the methods I've tested have worked.
             wait_time = 0
             timeout_seconds = 5
@@ -87,15 +88,14 @@ class StartTimerlatStep:
                 wait_time += sleep_time
 
             if not trace_file_exists:
-                print(
-                    "Unable to read tracer output; " "Skipping time series collection\n"
-                )
+                print("Unable to read tracer output; Skipping time series collection\n")
             else:
+                timeseries_file = open("./timeseries_file", "w")
                 try:
                     timeseries_proc = subprocess.Popen(
                         timeseries_cmd,
                         start_new_session=True,
-                        stdout=subprocess.PIPE,
+                        stdout=timeseries_file,
                         stderr=subprocess.PIPE,
                         text=True,
                     )
@@ -124,7 +124,7 @@ class StartTimerlatStep:
         if params.enable_time_series and trace_file_exists:
             # Interrupt the time series collection process and capture the output
             timeseries_proc.send_signal(2)
-            timeseries_output, _ = timeseries_proc.communicate()
+            timeseries_file.close()
 
         timerlat_output, _ = timerlat_proc.communicate()
 
@@ -224,56 +224,87 @@ class StartTimerlatStep:
         #  <...>-625883 [002] .. 123.769534: #1003 context user-ret timer_latency 462 ns
 
         if params.enable_time_series and trace_file_exists:
-            timeseries_lines = iter(timeseries_output.splitlines())
 
             # The calculation of the offset from uptime to current time certainly means
             # that our time series is not 100% accurately aligned to the nanosecond, but
             # the relative times will be accurate. We'll accept this as good enough.
             uptime_offset = time.time() - time.monotonic()
 
-            if all(False for _ in timeseries_lines):
-                print(
-                    "No results reading tracer output; "
-                    "Skipping time series collection\n"
-                )
+            with open("./timeseries_file") as timeseries_output:
 
-            for line in timeseries_lines:
-                line_list = line.split()
-                # Because the tracer format is dependent on the underlying OS and cannot
-                # be controlled by the container, check the tracer output format and
-                # break gracefully if we don't recognize it
-                try:
-                    cpu = int(line_list[1][1:-1])
-                    uptimestamp = float(line_list[3][:-1])
-                    timestamp = str(
-                        datetime.fromtimestamp(uptimestamp + uptime_offset)
-                        .astimezone()
-                        .isoformat()
+                if all(False for _ in timeseries_output):
+                    print(
+                        "No results reading tracer output; "
+                        "Skipping time series collection\n"
                     )
-                    context = str(line_list[6])
-                    latency = int(line_list[8])
 
-                except (IndexError, ValueError):
-                    print("Unknown tracer format; Skipping time series collection\n")
-                    timeseries_dict = {}
-                    break
+                for line in timeseries_output:
+                    line_list = line.split()
 
-                # The trace collects for all CPUs, so skip any CPU we did not select
-                # via the input to the plugin
-                if params.cpus and int(cpu) not in params.cpus:
-                    continue
-                # Create a separate time series for each CPU + context combination
-                cpu_context = f"cpu{cpu}_{context}"
-                if cpu_context not in timeseries_dict:
-                    timeseries_dict[cpu_context] = []
-                timeseries_dict[cpu_context].append(
-                    latency_timeseries_schema.unserialize(
-                        {
-                            "timestamp": timestamp,
-                            "latency_ns": latency,
-                        }
+                    # The first object in the line is a string, and it is possible for
+                    # it to have spaces in it. We'll try to cast the second object,
+                    # which should be the CPU number surrounded with [], to an int. If
+                    # that fails, we discard that object from the line_list.
+                    for i, _ in enumerate(line_list):
+                        if i == 1:
+                            try:
+                                cpu = int(line_list[i][1:-1])
+                                break
+                            except ValueError:
+                                line_list.pop(i)
+                            except IndexError:
+                                print(
+                                    "Unknown tracer format; Skipping time series "
+                                    f"collection: \n {line}"
+                                )
+                                timeseries_dict = {}
+                                break
+
+                    # Because the tracer format is dependent on the underlying OS and
+                    # cannot be controlled by the container, check the tracer output
+                    # format and break gracefully if we don't recognize it
+                    try:
+                        uptimestamp = float(line_list[3][:-1])
+                        timestamp = str(
+                            datetime.fromtimestamp(uptimestamp + uptime_offset)
+                            .astimezone()
+                            .isoformat()
+                        )
+                        context = str(line_list[6])
+                        latency = int(line_list[8])
+
+                    except (IndexError, ValueError) as error:
+                        print(
+                            "Unknown tracer format; Skipping time series collection: "
+                            f"{error}\n{line}"
+                        )
+                        timeseries_dict = {}
+                        break
+
+                    # The trace collects for all CPUs, so skip any CPU we did not select
+                    # via the input to the plugin
+                    if params.cpus and int(cpu) not in params.cpus:
+                        continue
+                    # Create a separate time series for each CPU + context combination
+                    cpu_context = f"cpu{cpu}_{context}"
+                    if cpu_context not in timeseries_dict:
+                        timeseries_dict[cpu_context] = []
+                    if cpu_context not in last_uptimestamp:
+                        last_uptimestamp[cpu_context] = 0
+                    if last_uptimestamp[cpu_context] and (
+                        uptimestamp - last_uptimestamp[cpu_context]
+                        < params.time_series_resolution
+                    ):
+                        continue
+                    last_uptimestamp[cpu_context] = uptimestamp
+                    timeseries_dict[cpu_context].append(
+                        latency_timeseries_schema.unserialize(
+                            {
+                                "timestamp": timestamp,
+                                "latency_ns": latency,
+                            }
+                        )
                     )
-                )
 
         return "success", TimerlatOutput(
             time_unit,
