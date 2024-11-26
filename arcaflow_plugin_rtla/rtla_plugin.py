@@ -129,7 +129,7 @@ class StartTimerlatStep:
             timeseries_file.close()
             trace_file.close()
 
-        timerlat_output, _ = timerlat_proc.communicate()
+        timerlat_output = timerlat_proc.stdout.read()
 
         # The output from the `rtla timerlat hist` command is columnar in three
         # sections, plus headers. The first section is histogram data, which will
