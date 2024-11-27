@@ -1,4 +1,5 @@
 duration: 5
+enable-time-series: True
 user-threads: True
 cpus:
   - 1

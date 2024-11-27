@@ -57,6 +57,9 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
                 <table><tbody><tr><th>Name:</th><td>timerlat duration seconds</td></tr><tr><th>Description:</th><td width="500">Duration of the session in seconds</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
 </tr>
 </tbody></table>
+            </details><details><summary>enable-time-series (<code>bool</code>)</summary>
+                <table><tbody><tr><th>Name:</th><td>enable time series</td></tr><tr><th>Description:</th><td width="500">Enable collection of latency time series data</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>false</code></pre></td></tr><tr><th>Type:</th><td><code>bool</code></td></tr>
+</tbody></table>
             </details><details><summary>entries (<code>int</code>)</summary>
                 <table><tbody><tr><th>Name:</th><td>histogram entries</td></tr><tr><th>Description:</th><td width="500">Set the number of entries of the histogram (default 256)</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td><tr><th>Minimum:</th><td>10</td></tr><tr><th>Maximum:</th><td>9999999</td></tr>
 </tr>
@@ -76,6 +79,10 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tbody></table>
             </details><details><summary>period (<code>int</code>)</summary>
                 <table><tbody><tr><th>Name:</th><td>timerlat period</td></tr><tr><th>Description:</th><td width="500">Timerlat period in μs</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
+</tr>
+</tbody></table>
+            </details><details><summary>time-series-resolution (<code>float</code>)</summary>
+                <table><tbody><tr><th>Name:</th><td>time series resolution</td></tr><tr><th>Description:</th><td width="500">Minimum time in seconds between time series entries</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>1.0</code></pre></td></tr><tr><th>Type:</th><td><code>float</code></td>
 </tr>
 </tbody></table>
             </details><details><summary>user-threads (<code>bool</code>)</summary>
@@ -101,6 +108,9 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
         <table><tbody><tr><th>Name:</th><td>timerlat duration seconds</td></tr><tr><th>Description:</th><td width="500">Duration of the session in seconds</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
 </tr>
 </tbody></table>
+        </details><details><summary>enable-time-series (<code>bool</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>enable time series</td></tr><tr><th>Description:</th><td width="500">Enable collection of latency time series data</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>false</code></pre></td></tr><tr><th>Type:</th><td><code>bool</code></td></tr>
+</tbody></table>
         </details><details><summary>entries (<code>int</code>)</summary>
         <table><tbody><tr><th>Name:</th><td>histogram entries</td></tr><tr><th>Description:</th><td width="500">Set the number of entries of the histogram (default 256)</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td><tr><th>Minimum:</th><td>10</td></tr><tr><th>Maximum:</th><td>9999999</td></tr>
 </tr>
@@ -120,6 +130,10 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tbody></table>
         </details><details><summary>period (<code>int</code>)</summary>
         <table><tbody><tr><th>Name:</th><td>timerlat period</td></tr><tr><th>Description:</th><td width="500">Timerlat period in μs</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
+</tr>
+</tbody></table>
+        </details><details><summary>time-series-resolution (<code>float</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>time series resolution</td></tr><tr><th>Description:</th><td width="500">Minimum time in seconds between time series entries</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Default (JSON encoded):</th><td><pre><code>1.0</code></pre></td></tr><tr><th>Type:</th><td><code>float</code></td>
 </tr>
 </tbody></table>
         </details><details><summary>user-threads (<code>bool</code>)</summary>
@@ -182,6 +196,29 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
     </details>
 </td></tr></tr>
 </tbody></table>
+            </details><details><summary>latency_time_series (<code>map[<code>string</code>,<code>list[<code>reference[LatencyTimeSeries]</code>]</code>]</code>)</summary>
+                <table><tbody><tr><th>Name:</th><td>latency time series</td></tr><tr><th>Description:</th><td width="500">Time series of latencies for each CPU and context</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>map[<code>string</code>,<code>list[<code>reference[LatencyTimeSeries]</code>]</code>]</code></td><tr><td colspan="2">
+    <details>
+        <summary>Key type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>string</code></td></tr>
+</tbody></table>
+    </details>
+</td></tr>
+<tr><td colspan="2">
+    <details>
+        <summary>Value type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>list[<code>reference[LatencyTimeSeries]</code>]</code></td><tr><td colspan="2">
+    <details>
+        <summary>List items</summary>
+        <table><tbody><tr><th>Type:</th><td><code>reference[LatencyTimeSeries]</code></td><tr><th>Referenced object:</th><td>LatencyTimeSeries</td></tr></tr>
+</tbody></table>
+    </details>
+</td></tr></tr>
+</tbody></table>
+    </details>
+</td></tr>
+</tr>
+</tbody></table>
             </details><details><summary>stats_per_col (<code>list[<code>map[<code>string</code>,<code>any</code>]</code>]</code>)</summary>
                 <table><tbody><tr><th>Name:</th><td>statistics per column</td></tr><tr><th>Description:</th><td width="500">Latency statistics per captured column</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>map[<code>string</code>,<code>any</code>]</code>]</code></td><tr><td colspan="2">
     <details>
@@ -238,6 +275,17 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
         </details></td></tr>
 </tr>
 </tbody></table>
+        </details><details><summary>LatencyTimeSeries (<code>object</code>)</summary>
+            <table><tbody><tr><th>Type:</th><td><code>object</code></td><tr><th>Properties</th><td><details><summary>latency_ns (<code>int</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>latency in ns</td></tr><tr><th>Description:</th><td width="500">CPU latency value in nanoseconds</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>int</code></td>
+</tr>
+</tbody></table>
+        </details><details><summary>timestamp (<code>string</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>timestamp</td></tr><tr><th>Description:</th><td width="500">CPU latency timestamp</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>string</code></td></tr>
+</tbody></table>
+        </details></td></tr>
+</tr>
+</tbody></table>
         </details><details><summary>TimerlatOutput (<code>object</code>)</summary>
             <table><tbody><tr><th>Type:</th><td><code>object</code></td><tr><th>Properties</th><td><details><summary>latency_hist (<code>list[<code>map[<code>string</code>,<code>int</code>]</code>]</code>)</summary>
         <table><tbody><tr><th>Name:</th><td>latency histogram</td></tr><tr><th>Description:</th><td width="500">Histogram of latencies</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>map[<code>string</code>,<code>int</code>]</code>]</code></td><tr><td colspan="2">
@@ -262,6 +310,29 @@ Runs the RTLA Timerlat data collection and then processes the results into a mac
 </tbody></table>
     </details>
 </td></tr></tr>
+</tbody></table>
+        </details><details><summary>latency_time_series (<code>map[<code>string</code>,<code>list[<code>reference[LatencyTimeSeries]</code>]</code>]</code>)</summary>
+        <table><tbody><tr><th>Name:</th><td>latency time series</td></tr><tr><th>Description:</th><td width="500">Time series of latencies for each CPU and context</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>map[<code>string</code>,<code>list[<code>reference[LatencyTimeSeries]</code>]</code>]</code></td><tr><td colspan="2">
+    <details>
+        <summary>Key type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>string</code></td></tr>
+</tbody></table>
+    </details>
+</td></tr>
+<tr><td colspan="2">
+    <details>
+        <summary>Value type</summary>
+        <table><tbody><tr><th>Type:</th><td><code>list[<code>reference[LatencyTimeSeries]</code>]</code></td><tr><td colspan="2">
+    <details>
+        <summary>List items</summary>
+        <table><tbody><tr><th>Type:</th><td><code>reference[LatencyTimeSeries]</code></td><tr><th>Referenced object:</th><td>LatencyTimeSeries</td></tr></tr>
+</tbody></table>
+    </details>
+</td></tr></tr>
+</tbody></table>
+    </details>
+</td></tr>
+</tr>
 </tbody></table>
         </details><details><summary>stats_per_col (<code>list[<code>map[<code>string</code>,<code>any</code>]</code>]</code>)</summary>
         <table><tbody><tr><th>Name:</th><td>statistics per column</td></tr><tr><th>Description:</th><td width="500">Latency statistics per captured column</td></tr><tr><th>Required:</th><td>No</td></tr><tr><th>Type:</th><td><code>list[<code>map[<code>string</code>,<code>any</code>]</code>]</code></td><tr><td colspan="2">
