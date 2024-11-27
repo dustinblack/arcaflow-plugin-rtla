@@ -78,7 +78,7 @@ class StartTimerlatStep:
             wait_time = 0
             timeout_seconds = 5
             sleep_time = 0.5
-            trace_file = False
+            trace_file = None
             while wait_time < timeout_seconds:
                 try:
                     trace_file = open(trace_path, "r")
@@ -106,6 +106,9 @@ class StartTimerlatStep:
                         f"""{err.cmd[0]} failed with return code {err.returncode}:\n
                         {err.output}"""
                     )
+                finally:
+                    timeseries_file.close()
+                    trace_file.close()
 
         try:
             # Block here, waiting on the cancel signal
@@ -134,8 +137,6 @@ class StartTimerlatStep:
         if params.enable_time_series and trace_file:
             # Interrupt the time series collection process and capture the output
             timeseries_proc.send_signal(2)
-            timeseries_file.close()
-            trace_file.close()
 
             # The calculation of the offset from uptime to current time certainly means
             # that our time series is not 100% accurately aligned to the nanosecond, but
@@ -151,40 +152,27 @@ class StartTimerlatStep:
                     )
 
                 for line in timeseries_output:
-                    line_list = line.split()
-
                     # The first object in the line is a string, and it is possible for
-                    # it to have spaces in it. We'll try to cast the second object,
-                    # which should be the CPU number surrounded with [], to an int. If
-                    # that fails, we discard that object from the line_list.
-                    for i, _ in enumerate(line_list):
-                        if i == 1:
-                            try:
-                                cpu_val = re.compile(r"\[([0-9][0-9][0-9])\]")
-                                cpu = int(cpu_val.match(line_list[i]).group(1))
-                                break
-                            except (ValueError, AttributeError):
-                                line_list.pop(i)
-                            except IndexError as error:
-                                print(
-                                    "Unable to determine CPU number; Skipping time "
-                                    f"series collection: {error}\n{line}"
-                                )
-                                timeseries_dict = {}
-                                break
+                    # it to have spaces in it, so we split first on the expected "["
+                    # deliniator for the CPU number field.
+                    # FIXME: I can't be 100% sure that a "[" wont' appear in the string
+                    # that is the first object of the line.
+                    stripped_line = line.split("[")
+                    line_list = stripped_line[1].split()
 
                     # Because the tracer format is dependent on the underlying OS and
                     # cannot be controlled by the container, check the tracer output
                     # format and break gracefully if we don't recognize it
                     try:
-                        uptimestamp = float(line_list[3][:-1])
-                        timestamp = str(
+                        cpu = int(line_list[0][:-1])
+                        uptimestamp = float(line_list[2][:-1])
+                        timestamp = (
                             datetime.fromtimestamp(uptimestamp + uptime_offset)
                             .astimezone()
                             .isoformat()
                         )
-                        context = str(line_list[6])
-                        latency = int(line_list[8])
+                        context = str(line_list[5])
+                        latency = int(line_list[7])
 
                     except (IndexError, ValueError) as error:
                         print(
